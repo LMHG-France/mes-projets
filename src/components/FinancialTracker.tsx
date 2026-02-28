@@ -66,6 +66,26 @@ export function FinancialTracker() {
 
   const latestFinancial = financials[0];
 
+  // --- Calculs pour les cartes Profit ---
+  const totalProfit = financials.reduce((sum, f) => sum + f.profit, 0);
+
+  const currentMonthProfit = (() => {
+    const now = new Date();
+    const current = financials.find(f => {
+      const d = new Date(f.month);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    return current?.profit ?? 0;
+  })();
+
+  const averageMargin = (() => {
+    const withRevenue = financials.filter(f => f.revenue > 0);
+    if (withRevenue.length === 0) return 0;
+    const avg = withRevenue.reduce((sum, f) => sum + (f.profit / f.revenue) * 100, 0);
+    return avg / withRevenue.length;
+  })();
+  // --------------------------------------
+
   return (
     <div className="py-8 px-4 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -85,6 +105,44 @@ export function FinancialTracker() {
             Ajouter un mois
           </button>
         </div>
+
+        {/* ===== TROIS CARTES PROFIT ===== */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="text-green-500" size={22} />
+            <h2 className="text-xl font-semibold text-gray-900">Profit</h2>
+            <span className="text-sm font-normal text-gray-500">Suivez vos bénéfices et performances</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Profit Total */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Profit Total</p>
+              <p className={`text-3xl font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(totalProfit)}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Toutes les commandes</p>
+            </div>
+
+            {/* Profit Mensuel */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Profit Mensuel</p>
+              <p className={`text-3xl font-bold ${currentMonthProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                {formatCurrency(currentMonthProfit)}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Ce mois-ci</p>
+            </div>
+
+            {/* Marge Moyenne */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Marge Moyenne</p>
+              <p className={`text-3xl font-bold ${averageMargin >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                {averageMargin.toFixed(1)}%
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Sur toutes les ventes</p>
+            </div>
+          </div>
+        </div>
+        {/* ============================= */}
 
         {latestFinancial && (
           <div className="mb-8">
