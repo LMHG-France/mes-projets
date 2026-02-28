@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appliquer la migration</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Appliquer la migration</h1>
+
+        <div class="info">
+            <strong>Migration à appliquer :</strong>
+            <pre>ALTER TABLE orders ADD COLUMN expected_delivery_date date;</pre>
+        </div>
+
+        <p>Cette migration ajoutera la colonne <code>expected_delivery_date</code> à la table <code>orders</code> pour permettre d'enregistrer la date de livraison prévue.</p>
+
+        <button id="applyBtn" onclick="applyMigration()">Appliquer la migration</button>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://gpwwvcgxdoalkpbrulaz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdwd3d2Y2d4ZG9hbGtwYnJ1bGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjYzMDYsImV4cCI6MjA4NzgwMjMwNn0.Q7UIMNeqsg6T1eey4aQ1YCcu_iuAaO8AeXGLaJzYv4Q';
+
+        async function applyMigration() {
+            const btn = document.getElementById('applyBtn');
+            const messageDiv = document.getElementById('message');
+
+            btn.disabled = true;
+            btn.textContent = 'Application en cours...';
+            messageDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify({
+                        sql: `
+                            DO $$
+                            BEGIN
+                              IF NOT EXISTS (
+                                SELECT 1 FROM information_schema.columns
+                                WHERE table_name = 'orders' AND column_name = 'expected_delivery_date'
+                              ) THEN
+                                ALTER TABLE orders ADD COLUMN expected_delivery_date date;
+                              END IF;
+                            END $$;
+                        `
+                    })
+                });
+
+                if (response.ok) {
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = '✓ Migration appliquée avec succès ! Vous pouvez maintenant ajouter des commandes.';
+                    btn.textContent = '✓ Migration appliquée';
+                } else {
+                    const error = await response.json();
+                    messageDiv.className = 'message error';
+                    messageDiv.innerHTML = `<strong>Erreur:</strong> ${error.message || 'Une erreur est survenue'}<br><br>
+                        <strong>Solution:</strong> Allez sur <a href="https://supabase.com/dashboard/project/gpwwvcgxdoalkpbrulaz/editor" target="_blank">le SQL Editor de Supabase</a> et exécutez:<br>
+                        <pre>ALTER TABLE orders ADD COLUMN expected_delivery_date date;</pre>`;
+                    btn.disabled = false;
+                    btn.textContent = 'Réessayer';
+                }
+            } catch (err) {
+                messageDiv.className = 'message error';
+                messageDiv.innerHTML = `<strong>Erreur:</strong> ${err.message}<br><br>
+                    <strong>Solution:</strong> Allez sur <a href="https://supabase.com/dashboard/project/gpwwvcgxdoalkpbrulaz/editor" target="_blank">le SQL Editor de Supabase</a> et exécutez:<br>
+                    <pre>ALTER TABLE orders ADD COLUMN expected_delivery_date date;</pre>`;
+                btn.disabled = false;
+                btn.textContent = 'Réessayer';
+            }
+        }
+    </script>
+</body>
+</html>

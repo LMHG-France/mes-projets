@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Apply Status Migration</title>
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.10';
+
+        const supabaseUrl = 'https://gpwwvcgxdoalkpbrulaz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdwd3d2Y2d4ZG9hbGtwYnJ1bGF6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjIyNjMwNiwiZXhwIjoyMDg3ODAyMzA2fQ.xJ0EYRkHf7wCqFQh2_qZmjKiBFDqLmE6vTFUy7lYXGQ';
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        async function applyMigration() {
+            console.log('Applying migration to add status column...');
+            document.body.innerHTML = '<h1>Applying migration...</h1><p>Please wait...</p>';
+
+            const sql = `
+                DO $$
+                BEGIN
+                  IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'orders' AND column_name = 'status'
+                  ) THEN
+                    ALTER TABLE orders ADD COLUMN status text;
+                  END IF;
+                END $$;
+            `;
+
+            try {
+                const { data, error } = await supabase.rpc('exec_sql', { sql });
+
+                if (error) {
+                    console.error('Migration error:', error);
+                    document.body.innerHTML = '<h1 style="color: red;">Migration Failed</h1><pre>' + JSON.stringify(error, null, 2) + '</pre>';
+                } else {
+                    console.log('Migration successful!');
+                    document.body.innerHTML = '<h1 style="color: green;">Migration Successful!</h1><p>Status column has been added to orders table.</p><p>You can close this page now.</p>';
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                document.body.innerHTML = '<h1 style="color: red;">Error</h1><pre>' + err.message + '</pre>';
+            }
+        }
+
+        applyMigration();
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Initializing...</h1>
+</body>
+</html>
