@@ -78,7 +78,8 @@ export function OrdersManager() {
               </div>
               <div>
                 <p className="text-sm text-gray-500 font-medium">Valeur totale</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalValue.toFixed(2)} €</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalValue.toFixed(2)}
+                  €</p>
               </div>
             </div>
           </div>
