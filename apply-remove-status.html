@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Remove Status Column</title>
+</head>
+<body>
+  <h1>Removing Status Column...</h1>
+  <div id="result"></div>
+
+  <script type="module">
+    const SUPABASE_URL = 'https://gpwwvcgxdoalkpbrulaz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdwd3d2Y2d4ZG9hbGtwYnJ1bGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjYzMDYsImV4cCI6MjA4NzgwMjMwNn0.Q7UIMNeqsg6T1eey4aQ1YCcu_iuAaO8AeXGLaJzYv4Q';
+
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function removeMigration() {
+      try {
+        const { data, error } = await supabase.rpc('exec_sql', {
+          sql: `
+            DO $$
+            BEGIN
+              IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'orders' AND column_name = 'status'
+              ) THEN
+                ALTER TABLE orders DROP COLUMN status;
+              END IF;
+            END $$;
+          `
+        });
+
+        if (error) {
+          document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+          console.error('Migration error:', error);
+        } else {
+          document.getElementById('result').innerHTML = '<p style="color: green;">Status column removed successfully!</p>';
+          console.log('Migration success:', data);
+        }
+      } catch (err) {
+        document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + err.message + '</p>';
+        console.error('Error:', err);
+      }
+    }
+
+    removeMigration();
+  </script>
+</body>
+</html>

@@ -6,18 +6,16 @@ interface OrdersListProps {
   orders: Order[];
   onEdit: (order: Order) => void;
   onDelete: (orderId: string) => Promise<void>;
-  onUpdateStatus: (orderId: string, status: string | null) => Promise<void>;
   isLoading?: boolean;
   onFilteredOrdersChange?: (filtered: Order[]) => void;
 }
 
-export function OrdersList({ orders, onEdit, onDelete, onUpdateStatus, isLoading, onFilteredOrdersChange }: OrdersListProps) {
+export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrdersChange }: OrdersListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDate, setFilterDate] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'supplier'>('date');
-  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const handleDelete = async (orderId: string) => {
     try {
@@ -30,47 +28,12 @@ export function OrdersList({ orders, onEdit, onDelete, onUpdateStatus, isLoading
     }
   };
 
-  const handleStatusChange = async (orderId: string, newStatus: string) => {
-    try {
-      setUpdatingStatus(true);
-      const statusValue = newStatus === '' ? null : newStatus;
-      await onUpdateStatus(orderId, statusValue);
-
-      // Mettre à jour l'ordre sélectionné localement
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: statusValue });
-      }
-    } catch (error) {
-      alert('Erreur lors de la mise à jour du statut');
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
-  };
-
-  const getStatusStyle = (status: string | null) => {
-    if (!status) return null;
-
-    switch (status) {
-      case 'Problème':
-        return 'bg-red-500 text-white';
-      case 'En cours Relais':
-      case 'En cours Maison':
-        return 'bg-orange-500 text-white';
-      case 'Livré':
-        return 'bg-green-500 text-white';
-      case 'Récupéré':
-        return 'bg-green-700 text-white';
-      default:
-        return null;
-    }
   };
 
   const filteredAndSortedOrders = useMemo(() => {
@@ -221,11 +184,6 @@ export function OrdersList({ orders, onEdit, onDelete, onUpdateStatus, isLoading
             key={order.id}
             className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col aspect-square"
           >
-            {order.status && (
-              <div className={`px-4 py-2 text-center text-sm font-semibold ${getStatusStyle(order.status)}`}>
-                {order.status}
-              </div>
-            )}
             <div className="flex-1 flex flex-col p-4">
               <div className="mb-3">
                 <h3 className="text-base font-semibold text-gray-900 truncate">
@@ -287,11 +245,6 @@ export function OrdersList({ orders, onEdit, onDelete, onUpdateStatus, isLoading
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedOrder(null)}>
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-gray-200 rounded-t-2xl overflow-hidden">
-              {selectedOrder.status && (
-                <div className={`px-6 py-3 text-center text-sm font-semibold ${getStatusStyle(selectedOrder.status)}`}>
-                  {selectedOrder.status}
-                </div>
-              )}
               <div className="p-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Détails de la commande</h2>
                 <button
@@ -305,7 +258,7 @@ export function OrdersList({ orders, onEdit, onDelete, onUpdateStatus, isLoading
 
             <div className="p-6">
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900">
                       {selectedOrder.supplier_name}
@@ -320,28 +273,6 @@ export function OrdersList({ orders, onEdit, onDelete, onUpdateStatus, isLoading
                       {selectedOrder.total_price.toFixed(2)} €
                     </p>
                   </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Statut de la commande
-                  </label>
-                  <select
-                    value={selectedOrder.status || ''}
-                    onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
-                    disabled={updatingStatus}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                  >
-                    <option value="">Aucun statut</option>
-                    <option value="Problème">Problème</option>
-                    <option value="En cours Relais">En cours Relais</option>
-                    <option value="En cours Maison">En cours Maison</option>
-                    <option value="Livré">Livré</option>
-                    <option value="Récupéré">Récupéré</option>
-                  </select>
-                  {updatingStatus && (
-                    <p className="text-xs text-gray-500 mt-1">Mise à jour en cours...</p>
-                  )}
                 </div>
               </div>
 

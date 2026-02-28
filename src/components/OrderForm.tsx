@@ -14,7 +14,6 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
   const [items, setItems] = useState<OrderItem[]>(initialData?.items || []);
   const [trackingLink, setTrackingLink] = useState(initialData?.tracking_link || '');
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(initialData?.expected_delivery_date || '');
-  const [status, setStatus] = useState(initialData?.status || '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -226,7 +225,6 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
         total_price: getTotalPrice(),
         tracking_link: trackingLink || null,
         expected_delivery_date: expectedDeliveryDate || null,
-        status: status || null,
       });
       onClose();
     } catch (err) {
@@ -252,26 +250,6 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {initialData && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Statut (optionnel)
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Aucun statut</option>
-                <option value="Problème">Problème</option>
-                <option value="En cours Relais">En cours Relais</option>
-                <option value="En cours Maison">En cours Maison</option>
-                <option value="Livré">Livré</option>
-                <option value="Récupéré">Récupéré</option>
-              </select>
-            </div>
-          )}
-
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Importer une screenshot ou facture de votre commande

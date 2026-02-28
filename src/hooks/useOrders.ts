@@ -18,7 +18,6 @@ export interface Order {
   total_price: number;
   tracking_link: string | null;
   expected_delivery_date: string | null;
-  status: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -104,7 +103,6 @@ export function useOrders() {
         items: orderData.items,
         total_price: orderData.total_price,
         tracking_link: orderData.tracking_link,
-        status: orderData.status,
       };
 
       // Ajouter expected_delivery_date seulement s'il est fourni

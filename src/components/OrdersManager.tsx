@@ -46,10 +46,6 @@ export function OrdersManager() {
     setEditingOrder(null);
   };
 
-  const handleUpdateStatus = async (orderId: string, status: string | null) => {
-    await updateOrder(orderId, { status });
-  };
-
   return (
     <div className="py-8 px-4 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -120,7 +116,6 @@ export function OrdersManager() {
               orders={orders}
               onEdit={handleEditOrder}
               onDelete={deleteOrder}
-              onUpdateStatus={handleUpdateStatus}
               isLoading={loading}
               onFilteredOrdersChange={setFilteredOrders}
             />
