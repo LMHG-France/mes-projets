@@ -4,6 +4,7 @@ import { Auth } from './components/Auth';
 import { OrdersManager } from './components/OrdersManager';
 import { StockManager } from './components/StockManager';
 import { ProfitManager } from './components/ProfitManager';
+import { FinancialTracker } from './components/FinancialTracker';
 import { Sidebar } from './components/Sidebar';
 
 function AppContent() {
@@ -41,6 +42,7 @@ function AppContent() {
         {activeView === 'orders' && <OrdersManager />}
         {activeView === 'stock' && <StockManager />}
         {activeView === 'profit' && <ProfitManager />}
+        {activeView === 'financial' && <FinancialTracker />}
       </main>
     </div>
   );

@@ -1,4 +1,4 @@
-import { ShoppingCart, Package, TrendingUp, Menu, X, LogOut } from 'lucide-react';
+import { ShoppingCart, Package, TrendingUp, Menu, X, LogOut, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,6 +15,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
     { id: 'orders', label: 'Commandes', icon: ShoppingCart },
     { id: 'stock', label: 'Stock en attente', icon: Package },
     { id: 'profit', label: 'Profit', icon: TrendingUp },
+    { id: 'financial', label: 'Suivi Financier', icon: DollarSign },
   ];
 
   const handleSignOut = async () => {
