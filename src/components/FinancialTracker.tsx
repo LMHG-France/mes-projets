@@ -1,301 +1,242 @@
-import { useState } from 'react';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Edit2, Trash2, Package, Wallet, CreditCard, Building2, Users, PiggyBank } from 'lucide-react';
-import { useFinancials, MonthlyFinancial } from '../hooks/useFinancials';
-import { FinancialForm } from './FinancialForm';
+import { useState, useEffect } from 'react';
+import { X, Package, Clock, Wallet, Building2, BadgePercent, TrendingUp, DollarSign, CalendarDays, FileText } from 'lucide-react';
+import { MonthlyFinancial } from '../hooks/useFinancials';
 
-export function FinancialTracker() {
-  const { financials, loading, addFinancial, updateFinancial, deleteFinancial } = useFinancials();
-  const [showForm, setShowForm] = useState(false);
-  const [editingFinancial, setEditingFinancial] = useState<MonthlyFinancial | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+interface FinancialFormProps {
+  onSubmit: (data: Omit<MonthlyFinancial, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
+  onClose: () => void;
+  initialData?: MonthlyFinancial;
+  isLoading?: boolean;
+}
 
-  const handleAddFinancial = async (data: Omit<MonthlyFinancial, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    try {
-      await addFinancial(data);
-      setShowForm(false);
-    } catch (error) {
-      alert('Erreur lors de l\'ajout des données financières');
+export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: FinancialFormProps) {
+  const [formData, setFormData] = useState({
+    month: '',
+    revenue: '',
+    profit: '',
+    amazon_stock_value: '',
+    pending_stock_value: '',
+    amazon_funds: '',
+    bank_funds: '',
+    supplier_credits: '',
+    notes: '',
+  });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        month: initialData.month?.slice(0, 7) ?? '',
+        revenue: String(initialData.revenue ?? ''),
+        profit: String(initialData.profit ?? ''),
+        amazon_stock_value: String(initialData.amazon_stock_value ?? ''),
+        pending_stock_value: String(initialData.pending_stock_value ?? ''),
+        amazon_funds: String(initialData.amazon_funds ?? ''),
+        bank_funds: String(initialData.bank_funds ?? ''),
+        supplier_credits: String(initialData.supplier_credits ?? ''),
+        notes: initialData.notes ?? '',
+      });
+    } else {
+      // Pré-remplir avec le mois courant
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      setFormData(prev => ({ ...prev, month: `${yyyy}-${mm}` }));
     }
+  }, [initialData]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleUpdateFinancial = async (data: Omit<MonthlyFinancial, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    if (editingFinancial) {
-      try {
-        await updateFinancial(editingFinancial.id, data);
-        setEditingFinancial(null);
-        setShowForm(false);
-      } catch (error) {
-        alert('Erreur lors de la mise à jour des données financières');
-      }
-    }
-  };
-
-  const handleEdit = (financial: MonthlyFinancial) => {
-    setEditingFinancial(financial);
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ces données financières ?')) {
-      try {
-        setDeletingId(id);
-        await deleteFinancial(id);
-      } catch (error) {
-        alert('Erreur lors de la suppression');
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingFinancial(null);
-  };
-
-  const formatMonth = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      month: 'long',
-      year: 'numeric'
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      month: formData.month + '-01',
+      revenue: parseFloat(formData.revenue) || 0,
+      profit: parseFloat(formData.profit) || 0,
+      amazon_stock_value: parseFloat(formData.amazon_stock_value) || 0,
+      pending_stock_value: parseFloat(formData.pending_stock_value) || 0,
+      amazon_funds: parseFloat(formData.amazon_funds) || 0,
+      bank_funds: parseFloat(formData.bank_funds) || 0,
+      supplier_credits: parseFloat(formData.supplier_credits) || 0,
+      notes: formData.notes,
     });
   };
 
-  const formatCurrency = (value: number) => {
-    return value.toFixed(2) + ' €';
-  };
-
-  const latestFinancial = financials[0];
-
-  // --- Calculs pour les cartes Profit ---
-  const totalProfit = financials.reduce((sum, f) => sum + f.profit, 0);
-
-  const currentMonthProfit = (() => {
-    const now = new Date();
-    const current = financials.find(f => {
-      const d = new Date(f.month);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    });
-    return current?.profit ?? 0;
-  })();
-
-  const averageMargin = (() => {
-    const withRevenue = financials.filter(f => f.revenue > 0);
-    if (withRevenue.length === 0) return 0;
-    const avg = withRevenue.reduce((sum, f) => sum + (f.profit / f.revenue) * 100, 0);
-    return avg / withRevenue.length;
-  })();
-  // --------------------------------------
+  const fields = [
+    {
+      name: 'amazon_stock_value',
+      label: 'Valeur Stock Chez Amazon',
+      icon: <Package size={18} className="text-orange-500" />,
+      placeholder: '0.00',
+      color: 'orange',
+    },
+    {
+      name: 'pending_stock_value',
+      label: 'Valeur Stock en Attente',
+      icon: <Clock size={18} className="text-yellow-500" />,
+      placeholder: '0.00',
+      color: 'yellow',
+    },
+    {
+      name: 'amazon_funds',
+      label: 'Fond en Attente (Amazon)',
+      icon: <DollarSign size={18} className="text-blue-500" />,
+      placeholder: '0.00',
+      color: 'blue',
+    },
+    {
+      name: 'bank_funds',
+      label: 'Fond en Banque',
+      icon: <Building2 size={18} className="text-teal-500" />,
+      placeholder: '0.00',
+      color: 'teal',
+    },
+    {
+      name: 'supplier_credits',
+      label: 'Avoir Fournisseurs',
+      icon: <BadgePercent size={18} className="text-purple-500" />,
+      placeholder: '0.00',
+      color: 'purple',
+    },
+  ];
 
   return (
-    <div className="py-8 px-4 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Suivi Financier</h1>
-            <p className="text-gray-600 mt-1">Suivez vos performances financières mensuelles</p>
+            <h2 className="text-xl font-bold text-gray-900">
+              {initialData ? 'Modifier le mois' : 'Ajouter un mois'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">Renseignez vos données financières mensuelles</p>
           </div>
           <button
-            onClick={() => {
-              setEditingFinancial(null);
-              setShowForm(true);
-            }}
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <Plus size={20} />
-            Ajouter un mois
+            <X size={20} />
           </button>
         </div>
 
-        {/* ===== TROIS CARTES PROFIT ===== */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="text-green-500" size={22} />
-            <h2 className="text-xl font-semibold text-gray-900">Profit</h2>
-            <span className="text-sm font-normal text-gray-500">Suivez vos bénéfices et performances</span>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
+          {/* Mois */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <CalendarDays size={16} className="text-gray-400" />
+              Mois
+            </label>
+            <input
+              type="month"
+              name="month"
+              value={formData.month}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Profit Total */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Profit Total</p>
-              <p className={`text-3xl font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(totalProfit)}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">Toutes les commandes</p>
-            </div>
 
-            {/* Profit Mensuel */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Profit Mensuel</p>
-              <p className={`text-3xl font-bold ${currentMonthProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                {formatCurrency(currentMonthProfit)}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">Ce mois-ci</p>
+          {/* CA et Bénéfice */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <TrendingUp size={16} className="text-green-500" />
+                Chiffre d'Affaires (€)
+              </label>
+              <input
+                type="number"
+                name="revenue"
+                value={formData.revenue}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
             </div>
-
-            {/* Marge Moyenne */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Marge Moyenne</p>
-              <p className={`text-3xl font-bold ${averageMargin >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-                {averageMargin.toFixed(1)}%
-              </p>
-              <p className="text-xs text-gray-400 mt-1">Sur toutes les ventes</p>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <Wallet size={16} className="text-blue-500" />
+                Bénéfice (€)
+              </label>
+              <input
+                type="number"
+                name="profit"
+                value={formData.profit}
+                onChange={handleChange}
+                placeholder="0.00"
+                step="0.01"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
           </div>
-        </div>
-        {/* ============================= */}
 
-        {latestFinancial && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Aperçu du mois - {formatMonth(latestFinancial.month)}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-6 border border-green-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-green-500 p-3 rounded-lg">
-                    <TrendingUp className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-green-700 font-medium">Chiffre d'Affaire</p>
-                    <p className="text-2xl font-bold text-green-900">{formatCurrency(latestFinancial.revenue)}</p>
+          {/* Séparateur */}
+          <div className="border-t border-gray-100 pt-1">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Stocks & Trésorerie</p>
+
+            {/* Champs principaux */}
+            <div className="space-y-3">
+              {fields.map((field) => (
+                <div key={field.name}>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                    {field.icon}
+                    {field.label} (€)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name={field.name}
+                      value={formData[field.name as keyof typeof formData]}
+                      onChange={handleChange}
+                      placeholder={field.placeholder}
+                      step="0.01"
+                      min="0"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">€</span>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md p-6 border border-blue-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-blue-500 p-3 rounded-lg">
-                    <DollarSign className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-700 font-medium">Bénéfice</p>
-                    <p className="text-2xl font-bold text-blue-900">{formatCurrency(latestFinancial.profit)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-md p-6 border border-orange-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-orange-500 p-3 rounded-lg">
-                    <Package className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-orange-700 font-medium">Stock Amazon</p>
-                    <p className="text-2xl font-bold text-orange-900">{formatCurrency(latestFinancial.amazon_stock_value)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl shadow-md p-6 border border-teal-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-teal-500 p-3 rounded-lg">
-                    <Wallet className="text-white" size={24} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-teal-700 font-medium">Fonds en Banque</p>
-                    <p className="text-2xl font-bold text-teal-900">{formatCurrency(latestFinancial.bank_funds)}</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        )}
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Chargement des données financières...</p>
+          {/* Notes */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+              <FileText size={16} className="text-gray-400" />
+              Notes (optionnel)
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              placeholder="Remarques, événements du mois..."
+              rows={2}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            />
           </div>
-        ) : financials.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <TrendingUp size={48} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg">Aucune donnée financière pour le moment</p>
-            <p className="text-gray-400 text-sm">Commencez en cliquant sur "Ajouter un mois"</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mois</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">CA</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Bénéfice</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Stock Amazon</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Stock en Attente</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Fonds Amazon</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Fonds Banque</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Avoirs</th>
-                    <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {financials.map((financial) => (
-                    <tr key={financial.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{formatMonth(financial.month)}</div>
-                        {financial.notes && (
-                          <div className="text-xs text-gray-500 truncate max-w-xs">{financial.notes}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-sm font-semibold text-green-700">{formatCurrency(financial.revenue)}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className={`text-sm font-semibold ${financial.profit >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
-                          {formatCurrency(financial.profit)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">
-                        {formatCurrency(financial.amazon_stock_value)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">
-                        {formatCurrency(financial.pending_stock_value)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">
-                        {formatCurrency(financial.amazon_funds)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">
-                        {formatCurrency(financial.bank_funds)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-700">
-                        {formatCurrency(financial.supplier_credits)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(financial)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Modifier"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(financial.id)}
-                            disabled={deletingId === financial.id}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
-        {showForm && (
-          <FinancialForm
-            onSubmit={editingFinancial ? handleUpdateFinancial : handleAddFinancial}
-            onClose={handleCloseForm}
-            initialData={editingFinancial || undefined}
-            isLoading={loading}
-          />
-        )}
+          {/* Boutons */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Enregistrement...' : initialData ? 'Mettre à jour' : 'Enregistrer'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
