@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, Trash2, Upload, Percent, ExternalLink } from 'lucide-react';
+import { X, Plus, Trash2, Upload, Percent } from 'lucide-react';
 import { Order, OrderItem } from '../hooks/useOrders';
 
 interface OrderFormProps {
@@ -35,18 +35,21 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
   };
 
   const handlePriceInput = (index: number, value: string) => {
+    // Permettre les chiffres, points, virgules et un seul séparateur décimal
     const cleanValue = value.replace(',', '.');
+
+    // Si la valeur est vide ou juste un point/virgule, garder comme chaîne pour l'affichage
     if (value === '' || value === '.' || value === ',') {
       const newItems = [...items];
-      newItems[index] = { ...newItems[index], pricePerUnit: 0, price_ttc: 0, priceInput: value };
+      newItems[index] = { ...newItems[index], pricePerUnit: 0, priceInput: value };
       setItems(newItems);
       return;
     }
+
     const numValue = parseFloat(cleanValue);
     if (!isNaN(numValue)) {
       const newItems = [...items];
-      // On met à jour pricePerUnit ET price_ttc pour que le total se recalcule correctement
-      newItems[index] = { ...newItems[index], pricePerUnit: numValue, price_ttc: numValue, priceInput: value };
+      newItems[index] = { ...newItems[index], pricePerUnit: numValue, priceInput: value };
       setItems(newItems);
     }
   };
@@ -57,61 +60,97 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
 
   const applyDiscount = () => {
     const discountValue = parseFloat(discountInput);
+
     if (isNaN(discountValue) || discountValue <= 0 || discountValue >= 100) {
       setError('Veuillez entrer une réduction valide entre 0 et 100%');
       return;
     }
+
     const multiplier = 1 - (discountValue / 100);
     const newItems = items.map(item => ({
       ...item,
       pricePerUnit: parseFloat((item.pricePerUnit * multiplier).toFixed(2))
     }));
+
     setItems(newItems);
     setDiscountInput('');
     setError(null);
   };
 
+
   const processFile = async (file: File) => {
     setError(null);
     setExtracting(true);
+
     try {
       const formData = new FormData();
       formData.append('image', file);
+
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
       const response = await fetch(
         `${supabaseUrl}/functions/v1/extract_order_data`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${anonKey}` },
+          headers: {
+            Authorization: `Bearer ${anonKey}`,
+          },
           body: formData,
         }
       );
+
       const data = await response.json();
+
+      console.log('Received data from API:', data);
+
       if (!response.ok) {
+        console.error('API Error:', response.status, data);
         const errorMessage = data.details || data.error || 'Erreur lors de l\'extraction des données';
         setError(`Erreur ${response.status}: ${errorMessage}`);
         setExtracting(false);
         return;
       }
+
       if (data.error) {
+        console.error('Data error:', data);
         setError(data.error);
         setExtracting(false);
         return;
       }
+
+      console.log('Supplier name:', data.supplier_name);
+      console.log('Items:', data.items);
+
       setSupplierName(data.supplier_name || '');
+
+      // Normaliser les items pour s'assurer que tous les prix sont unitaires
       const normalizedItems = (data.items || []).map((item: OrderItem) => {
+        // Si price_ttc et pricePerUnit sont très différents, l'IA a peut-être mis le prix total dans l'un
+        // On vérifie si price_ttc est proche de pricePerUnit * quantity (ce qui indiquerait un prix total)
         let unitPrice = item.pricePerUnit;
+
         if (item.price_ttc && item.quantity > 1) {
+          // Calculer ce que serait le prix total si pricePerUnit est unitaire
           const expectedTotal = item.pricePerUnit * item.quantity;
+          // Si price_ttc est proche du total calculé (±10%), alors pricePerUnit est correct
+          // Sinon, si price_ttc est beaucoup plus petit, c'est probablement le prix unitaire
           if (Math.abs(item.price_ttc - expectedTotal) > expectedTotal * 0.1) {
+            // price_ttc n'est pas le total, donc c'est probablement le prix unitaire correct
             unitPrice = item.price_ttc;
           }
         } else if (item.price_ttc) {
+          // Pas de quantité multiple, utiliser price_ttc s'il existe
           unitPrice = item.price_ttc;
         }
-        return { ...item, pricePerUnit: unitPrice, price_ttc: unitPrice };
+
+        return {
+          ...item,
+          pricePerUnit: unitPrice,
+          price_ttc: unitPrice,
+        };
       });
+
       setItems(normalizedItems);
       setTrackingLink(data.tracking_link || '');
       setError(null);
@@ -125,6 +164,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
   const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     await processFile(file);
     e.target.value = '';
   };
@@ -145,31 +185,38 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
+
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
+
     const isValidType = file.type.startsWith('image/') || file.type === 'application/pdf';
     if (!isValidType) {
       setError('Veuillez déposer un fichier image ou PDF');
       return;
     }
+
     await processFile(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
     if (!supplierName.trim()) {
       setError('Le nom du fournisseur est requis');
       return;
     }
+
     if (items.length === 0) {
       setError('Veuillez ajouter au moins un article');
       return;
     }
-    if (items.some(item => !item.name.trim() || item.pricePerUnit < 0)) {
+
+    if (items.some(item => !item.name.trim() || item.pricePerUnit <= 0)) {
       setError('Tous les articles doivent avoir un nom et un prix valide');
       return;
     }
+
     try {
       setSubmitting(true);
       await onSubmit({
@@ -187,19 +234,6 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
     }
   };
 
-  // Valide si le lien est une URL correcte
-  const isValidUrl = (url: string) => {
-    try {
-      new URL(url.startsWith('http') ? url : `https://${url}`);
-      return url.trim().length > 0;
-    } catch { return false; }
-  };
-
-  const handleOpenLink = () => {
-    const url = trackingLink.startsWith('http') ? trackingLink : `https://${trackingLink}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -207,23 +241,27 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
           <h2 className="text-xl font-semibold text-gray-900">
             {initialData ? 'Modifier la commande' : 'Ajouter une commande'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
             <X size={24} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-
-          {/* Import screenshot */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Importer une screenshot ou facture de votre commande
             </label>
             <div className="flex gap-3">
               <input
-                type="file" accept="image/*,application/pdf"
-                onChange={handleScreenshotUpload} disabled={extracting}
-                className="hidden" id="screenshot-input"
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleScreenshotUpload}
+                disabled={extracting}
+                className="hidden"
+                id="screenshot-input"
               />
               <label
                 htmlFor="screenshot-input"
@@ -232,10 +270,15 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
                 <Upload size={18} />
                 {extracting ? 'Traitement...' : 'Poster votre commande'}
               </label>
+
               <div
-                onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
                 className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg transition-all ${
-                  isDragging ? 'border-blue-600 bg-blue-100' : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50'
+                  isDragging
+                    ? 'border-blue-600 bg-blue-100'
+                    : 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50'
                 } ${extracting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <Upload size={18} className={isDragging ? 'text-blue-600' : 'text-gray-400'} />
@@ -260,54 +303,69 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
             </div>
           </div>
 
-          {/* Fournisseur */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nom du fournisseur
             </label>
             <input
-              type="text" value={supplierName}
+              type="text"
+              value={supplierName}
               onChange={(e) => setSupplierName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ex: Amazon, Aliexpress..."
             />
           </div>
 
-          {/* Articles */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-gray-700">Articles</label>
-              <button type="button" onClick={addItem}
-                className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
-                <Plus size={16} /> Ajouter un article
+              <label className="block text-sm font-medium text-gray-700">
+                Articles
+              </label>
+              <button
+                type="button"
+                onClick={addItem}
+                className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+              >
+                <Plus size={16} />
+                Ajouter un article
               </button>
             </div>
+
             <div className="space-y-3">
               {items.map((item, index) => (
                 <div key={index} className="flex gap-3 items-start">
                   <div className="flex-1">
-                    <input type="text" value={item.name}
+                    <input
+                      type="text"
+                      value={item.name}
                       onChange={(e) => updateItem(index, 'name', e.target.value)}
                       placeholder="Nom du produit"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                   <div className="w-24">
-                    <input type="number" value={item.quantity}
+                    <input
+                      type="number"
+                      value={item.quantity}
                       onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                      placeholder="Qté" min="1"
+                      placeholder="Qté"
+                      min="1"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
                   <div className="w-32">
-                    <input type="text" inputMode="decimal"
+                    <input
+                      type="text"
+                      inputMode="decimal"
                       value={item.priceInput !== undefined ? item.priceInput : item.pricePerUnit}
                       onChange={(e) => handlePriceInput(index, e.target.value)}
                       placeholder="Prix TTC"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                     {item.price_ht && item.price_ttc && (
-                      <div className="text-xs text-gray-500 mt-1">HT: {item.price_ht.toFixed(2)} €</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        HT: {item.price_ht.toFixed(2)} €
+                      </div>
                     )}
                   </div>
                   <div className="w-28 text-right">
@@ -315,18 +373,23 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
                       {(item.quantity * (item.price_ttc || item.pricePerUnit)).toFixed(2)} €
                     </div>
                   </div>
-                  <button type="button" onClick={() => removeItem(index)}
-                    className="text-red-500 hover:text-red-700 p-2">
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    className="text-red-500 hover:text-red-700 p-2"
+                  >
                     <Trash2 size={18} />
                   </button>
                 </div>
               ))}
             </div>
+
             {items.length === 0 && (
               <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
                 Aucun article. Cliquez sur "Ajouter un article" pour commencer.
               </div>
             )}
+
             {items.length > 0 && (
               <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -334,15 +397,24 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
                 </label>
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
-                    <input type="number" value={discountInput}
+                    <input
+                      type="number"
+                      value={discountInput}
                       onChange={(e) => setDiscountInput(e.target.value)}
-                      placeholder="Ex: 15" step="0.1" min="0" max="99"
+                      placeholder="Ex: 15"
+                      step="0.1"
+                      min="0"
+                      max="99"
                       className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                     <Percent size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   </div>
-                  <button type="button" onClick={applyDiscount} disabled={!discountInput}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  <button
+                    type="button"
+                    onClick={applyDiscount}
+                    disabled={!discountInput}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
                     Appliquer
                   </button>
                 </div>
@@ -353,45 +425,31 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
             )}
           </div>
 
-          {/* ── Lien commande ── */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lien commande
+              Lien de suivi
             </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={trackingLink}
-                onChange={(e) => setTrackingLink(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="https://..."
-              />
-              <button
-                type="button"
-                onClick={handleOpenLink}
-                disabled={!isValidUrl(trackingLink)}
-                title="Ouvrir le lien"
-                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm"
-              >
-                <ExternalLink size={16} />
-                Ouvrir
-              </button>
-            </div>
+            <input
+              type="url"
+              value={trackingLink}
+              onChange={(e) => setTrackingLink(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="https://..."
+            />
           </div>
 
-          {/* Livraison prévue */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Livraison prévue
             </label>
             <input
-              type="date" value={expectedDeliveryDate}
+              type="date"
+              value={expectedDeliveryDate}
               onChange={(e) => setExpectedDeliveryDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* Prix total */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="flex justify-between items-center">
               <span className="text-lg font-medium text-gray-700">Prix total:</span>
@@ -402,16 +460,24 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
+            <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
           )}
 
           <div className="flex gap-3">
-            <button type="submit" disabled={submitting || isLoading}
-              className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={submitting || isLoading}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
               {submitting || isLoading ? 'Enregistrement...' : 'Enregistrer'}
             </button>
-            <button type="button" onClick={onClose}
-              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300"
+            >
               Annuler
             </button>
           </div>
