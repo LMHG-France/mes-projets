@@ -186,6 +186,13 @@ export function FinancialTracker() {
 
   const currentMetric = METRICS.find(m => m.key === activeMetric);
 
+  // Somme des valeurs du graphique sur la période filtrée
+  const chartSum = useMemo(() => {
+    if (isAllMetrics || chartData.length === 0) return null;
+    const key = activeMetric as string;
+    return chartData.reduce((sum: number, point: any) => sum + (point[key] ?? 0), 0);
+  }, [chartData, activeMetric, isAllMetrics]);
+
   const handleAddFinancial = async (data: Omit<MonthlyFinancial, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try { await addFinancial(data); setShowForm(false); }
     catch { alert("Erreur lors de l'ajout des données financières"); }
@@ -340,6 +347,26 @@ export function FinancialTracker() {
               </AreaChart>
             </ResponsiveContainer>
           )}
+
+        {/* Case somme de la période */}
+        {chartSum !== null && chartData.length > 0 && (
+          <div
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 flex items-center justify-between"
+            style={{ borderLeft: `4px solid ${currentMetric?.color ?? '#6b7280'}` }}
+          >
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Total — {currentMetric?.label}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Somme sur la période sélectionnée ({chartData.length} mois)
+              </p>
+            </div>
+            <p className="text-2xl font-bold" style={{ color: currentMetric?.color ?? '#6b7280' }}>
+              {formatCurrency(chartSum)}
+            </p>
+          </div>
+        )}
         </div>
 
         {/* Liste des mois */}
