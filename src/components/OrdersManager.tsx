@@ -47,7 +47,7 @@ function DeliveryBanner({ orders, onStatusChange }: {
         const diffDays = Math.round((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return { order: o, date, diffDays };
       })
-      .filter(d => d.diffDays >= -3)
+      .filter(d => d.diffDays >= -3 || d.order.delivery_status === 'available')
       .sort((a, b) => a.diffDays - b.diffDays)
       .slice(0, 6);
   }, [orders]);
@@ -80,9 +80,11 @@ function DeliveryBanner({ orders, onStatusChange }: {
       </div>
       <div className="divide-y divide-gray-100">
         {deliveries.map(({ order, date, diffDays }) => {
-          const urgency   = getUrgency(diffDays);
           const status    = (order.delivery_status ?? 'pending') as DeliveryStatus;
           const statusCfg = STATUS_CONFIG[status];
+          const urgency   = status === 'available'
+            ? { text: 'En attente', dot: 'bg-blue-500' }
+            : getUrgency(diffDays);
           const firstItem = order.items?.[0];
           const itemCount = order.items?.length ?? 0;
           const isDone    = status !== 'pending';
