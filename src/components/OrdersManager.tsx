@@ -11,10 +11,30 @@ const STATUS_CONFIG = {
   collected: { label: 'Récupéré',      color: 'text-purple-700', bg: 'bg-purple-100', border: 'border-purple-300' },
 } as const;
 
+function ConfirmModal({ message, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-purple-100 p-2.5 rounded-xl"><CheckCheck size={20} className="text-purple-600" /></div>
+          <h3 className="text-base font-semibold text-gray-900">Confirmation</h3>
+        </div>
+        <p className="text-sm text-gray-600 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Annuler</button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 text-sm font-medium text-white hover:bg-purple-700 transition-colors">Confirmer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DeliveryBanner({ orders, onStatusChange }: {
   orders: Order[];
   onStatusChange: (id: string, status: DeliveryStatus) => void;
 }) {
+  const [confirmOrder, setConfirmOrder] = useState(null);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -71,7 +91,13 @@ function DeliveryBanner({ orders, onStatusChange }: {
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${urgency.dot}`} />
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{order.supplier_name}</p>
+                  <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                    {order.supplier_name}
+                    {order.delivery_type === 'pickup'
+                      ? <span title="Point relais" className="ml-1.5 text-xs text-blue-500">📍</span>
+                      : <span title="Domicile" className="ml-1.5 text-xs text-gray-400">🏠</span>
+                    }
+                  </p>
                   <p className="text-xs text-gray-500 truncate">
                     {firstItem ? `${firstItem.quantity}x ${firstItem.name}` : '-'}
                     {itemCount > 1 && ` +${itemCount - 1} autre${itemCount > 2 ? 's' : ''}`}
@@ -84,17 +110,17 @@ function DeliveryBanner({ orders, onStatusChange }: {
                 <span className="text-xs font-medium text-gray-500 flex-shrink-0">{urgency.text}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {status === 'pending' && (<>
-                    <button onClick={() => onStatusChange(order.id, 'delivered')}
+                    <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'delivered'); }}
                       className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
                       <Home size={12} /><span className="hidden sm:inline">Livré</span>
                     </button>
-                    <button onClick={() => onStatusChange(order.id, 'available')}
+                    <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'available'); }}
                       className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
                       <MapPin size={12} /><span className="hidden sm:inline">Dispo</span>
                     </button>
                   </>)}
                   {status === 'available' && (
-                    <button onClick={() => { if (window.confirm('Marquer ce colis comme récupéré ?')) onStatusChange(order.id, 'collected'); }}
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmOrder(order.id); }}
                       className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
                       <CheckCheck size={12} /><span className="hidden sm:inline">Récupéré</span>
                     </button>
@@ -105,7 +131,7 @@ function DeliveryBanner({ orders, onStatusChange }: {
                     </span>
                   )}
                   {isDone && (
-                    <button onClick={() => onStatusChange(order.id, 'pending')}
+                    <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'pending'); }}
                       className="text-xs text-gray-400 hover:text-gray-600 px-1" title="Réinitialiser">✕</button>
                   )}
                 </div>
@@ -114,6 +140,14 @@ function DeliveryBanner({ orders, onStatusChange }: {
           );
         })}
       </div>
+    </div>
+      {confirmOrder && (
+        <ConfirmModal
+          message="Marquer ce colis comme récupéré ?"
+          onConfirm={() => { onStatusChange(confirmOrder, 'collected'); setConfirmOrder(null); }}
+          onCancel={() => setConfirmOrder(null)}
+        />
+      )}
     </div>
   );
 }
