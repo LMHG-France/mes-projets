@@ -144,7 +144,7 @@ function DeliveryBanner({ orders, onStatusChange }: {
       {confirmOrder && (
         <ConfirmModal
           message="Marquer ce colis comme récupéré ?"
-          onConfirm={() => { onStatusChange(confirmOrder, 'collected'); setConfirmOrder(null); }}
+          onConfirm={() => { onStatusChange(confirmOrder, "collected"); setConfirmOrder(null); }}
           onCancel={() => setConfirmOrder(null)}
         />
       )}
