@@ -94,7 +94,7 @@ function DeliveryBanner({ orders, onStatusChange }: {
                     </button>
                   </>)}
                   {status === 'available' && (
-                    <button onClick={() => onStatusChange(order.id, 'collected')}
+                    <button onClick={() => { if (window.confirm('Marquer ce colis comme récupéré ?')) onStatusChange(order.id, 'collected'); }}
                       className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
                       <CheckCheck size={12} /><span className="hidden sm:inline">Récupéré</span>
                     </button>
