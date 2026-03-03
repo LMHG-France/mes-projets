@@ -91,13 +91,7 @@ function DeliveryBanner({ orders, onStatusChange }: {
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${urgency.dot}`} />
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                    {order.supplier_name}
-                    {order.delivery_type === 'pickup'
-                      ? <span title="Point relais" className="ml-1.5 text-xs text-blue-500">📍</span>
-                      : <span title="Domicile" className="ml-1.5 text-xs text-gray-400">🏠</span>
-                    }
-                  </p>
+                  <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{order.supplier_name}</p>
                   <p className="text-xs text-gray-500 truncate">
                     {firstItem ? `${firstItem.quantity}x ${firstItem.name}` : '-'}
                     {itemCount > 1 && ` +${itemCount - 1} autre${itemCount > 2 ? 's' : ''}`}
@@ -110,14 +104,25 @@ function DeliveryBanner({ orders, onStatusChange }: {
                 <span className="text-xs font-medium text-gray-500 flex-shrink-0">{urgency.text}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {status === 'pending' && (<>
-                    <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'delivered'); }}
-                      className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
-                      <Home size={12} /><span className="hidden sm:inline">Livré</span>
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'available'); }}
-                      className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
-                      <MapPin size={12} /><span className="hidden sm:inline">Dispo</span>
-                    </button>
+                    {/* Badge type de livraison */}
+                    <span className={order.delivery_type === 'pickup'
+                      ? 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-600 bg-blue-50'
+                      : 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-500 bg-gray-50'
+                    }>
+                      {order.delivery_type === 'pickup' ? <><MapPin size={11} /><span className="hidden sm:inline">Point relais</span></> : <><Home size={11} /><span className="hidden sm:inline">Domicile</span></>}
+                    </span>
+                    {/* Bouton action selon type */}
+                    {order.delivery_type === 'pickup' ? (
+                      <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'available'); }}
+                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                        <MapPin size={12} /><span className="hidden sm:inline">Dispo</span>
+                      </button>
+                    ) : (
+                      <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'delivered'); }}
+                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
+                        <Home size={12} /><span className="hidden sm:inline">Livré</span>
+                      </button>
+                    )}
                   </>)}
                   {status === 'available' && (
                     <button onClick={(e) => { e.stopPropagation(); setConfirmOrder(order.id); }}
