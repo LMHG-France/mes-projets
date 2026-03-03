@@ -105,20 +105,17 @@ function DeliveryBanner({ orders, onStatusChange }: {
                 </div>
                 <span className="text-xs font-medium text-gray-500 flex-shrink-0">{urgency.text}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {status === 'pending' && (<>
-                    {order.delivery_type === 'pickup' ? (
-                      /* Point relais : statut auto via AfterShip, pas de bouton */
-                      <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-500 bg-blue-50">
-                        <MapPin size={11} /><span className="hidden sm:inline">Point relais</span>
-                      </span>
-                    ) : (
-                      /* Domicile : bouton manuel */
-                      <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'delivered'); }}
-                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
-                        <Home size={12} /><span className="hidden sm:inline">Livré</span>
-                      </button>
-                    )}
-                  </>)}
+                  {status === 'pending' && (
+                    <span className={order.delivery_type === 'pickup'
+                      ? 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-500 bg-blue-50'
+                      : 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-500 bg-gray-50'
+                    }>
+                      {order.delivery_type === 'pickup'
+                        ? <><MapPin size={11} /><span className="hidden sm:inline">Point relais</span></>
+                        : <><Home size={11} /><span className="hidden sm:inline">Domicile</span></>
+                      }
+                    </span>
+                  )}
                   {status === 'available' && (
                     <div className="flex items-center gap-1.5">
                       <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 font-medium">
