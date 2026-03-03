@@ -87,7 +87,7 @@ function DeliveryBanner({ orders, onStatusChange }: {
             : getUrgency(diffDays);
           const firstItem = order.items?.[0];
           const itemCount = order.items?.length ?? 0;
-          const isDone    = status !== 'pending';
+          const isDone    = status === 'collected' || status === 'delivered';
           return (
             <div key={order.id} onClick={() => order.tracking_link && window.open(order.tracking_link, '_blank')} className={`px-5 py-3 transition-colors cursor-pointer ${isDone ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-50'}`}>
               <div className="flex items-center gap-3">
