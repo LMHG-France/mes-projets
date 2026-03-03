@@ -21,6 +21,7 @@ export interface Order {
   tracking_link: string | null;
   expected_delivery_date: string | null;
   delivery_status: DeliveryStatus;
+  delivery_type: string | null;
   created_at: string;
   updated_at: string;
 }
