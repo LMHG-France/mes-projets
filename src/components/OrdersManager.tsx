@@ -104,20 +104,13 @@ function DeliveryBanner({ orders, onStatusChange }: {
                 <span className="text-xs font-medium text-gray-500 flex-shrink-0">{urgency.text}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {status === 'pending' && (<>
-                    {/* Badge type de livraison */}
-                    <span className={order.delivery_type === 'pickup'
-                      ? 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-600 bg-blue-50'
-                      : 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-500 bg-gray-50'
-                    }>
-                      {order.delivery_type === 'pickup' ? <><MapPin size={11} /><span className="hidden sm:inline">Point relais</span></> : <><Home size={11} /><span className="hidden sm:inline">Domicile</span></>}
-                    </span>
-                    {/* Bouton action selon type */}
                     {order.delivery_type === 'pickup' ? (
-                      <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'available'); }}
-                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
-                        <MapPin size={12} /><span className="hidden sm:inline">Dispo</span>
-                      </button>
+                      /* Point relais : statut auto via AfterShip, pas de bouton */
+                      <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-500 bg-blue-50">
+                        <MapPin size={11} /><span className="hidden sm:inline">Point relais</span>
+                      </span>
                     ) : (
+                      /* Domicile : bouton manuel */
                       <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'delivered'); }}
                         className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
                         <Home size={12} /><span className="hidden sm:inline">Livré</span>
@@ -125,10 +118,15 @@ function DeliveryBanner({ orders, onStatusChange }: {
                     )}
                   </>)}
                   {status === 'available' && (
-                    <button onClick={(e) => { e.stopPropagation(); setConfirmOrder(order.id); }}
-                      className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
-                      <CheckCheck size={12} /><span className="hidden sm:inline">Récupéré</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 font-medium">
+                        <MapPin size={11} />Disponible au relais
+                      </span>
+                      <button onClick={(e) => { e.stopPropagation(); setConfirmOrder(order.id); }}
+                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
+                        <CheckCheck size={12} /><span className="hidden sm:inline">Récupéré</span>
+                      </button>
+                    </div>
                   )}
                   {isDone && status !== 'available' && (
                     <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border font-medium ${statusCfg.color} ${statusCfg.bg} ${statusCfg.border}`}>
