@@ -358,7 +358,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
 
           {/* ── Lien commande + extraction auto de date ─────────── */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lien commande</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Lien de suivi</label>
             <div className="flex gap-2">
               <input
                 type="text"
