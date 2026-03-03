@@ -140,7 +140,6 @@ function DeliveryBanner({ orders, onStatusChange }: {
           );
         })}
       </div>
-    </div>
       {confirmOrder && (
         <ConfirmModal
           message="Marquer ce colis comme récupéré ?"
