@@ -1,8 +1,62 @@
-import { useState, useMemo } from 'react';
-import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck, RefreshCw } from 'lucide-react';
 import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
 import { OrderForm } from './OrderForm';
 import { OrdersList } from './OrdersList';
+import { supabase } from '../lib/supabase';
+
+function useCronStatus() {
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [refreshing, setRefreshing]   = useState(false);
+
+  const fetchLastRefresh = useCallback(async () => {
+    const { data } = await supabase
+      .from('orders')
+      .select('delivery_date_updated_at')
+      .not('delivery_date_updated_at', 'is', null)
+      .order('delivery_date_updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data?.delivery_date_updated_at) setLastRefresh(new Date(data.delivery_date_updated_at));
+  }, []);
+
+  useEffect(() => { fetchLastRefresh(); }, [fetchLastRefresh]);
+
+  const triggerRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('id, tracking_link')
+        .not('tracking_link', 'is', null)
+        .neq('tracking_link', '')
+        .neq('delivery_status', 'collected');
+      await Promise.all((orders || []).map(o =>
+        fetch(`${supabaseUrl}/functions/v1/extract_delivery_date`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anonKey}` },
+          body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
+        })
+      ));
+      await fetchLastRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const getStatus = () => {
+    if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
+    const minAgo = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
+    if (minAgo < 45)  return { label: `Màj il y a ${minAgo} min`, color: 'text-green-300', dot: 'bg-green-400' };
+    if (minAgo < 120) return { label: `Màj il y a ${minAgo} min`, color: 'text-yellow-300', dot: 'bg-yellow-400' };
+    const hAgo = Math.round(minAgo / 60);
+    return { label: `Màj il y a ${hAgo}h`, color: 'text-red-300', dot: 'bg-red-400' };
+  };
+
+  return { status: getStatus(), refreshing, triggerRefresh };
+}
 
 const STATUS_CONFIG = {
   pending:   { label: 'En attente',    color: 'text-gray-500',   bg: 'bg-gray-100',   border: 'border-gray-200' },
@@ -30,9 +84,12 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   );
 }
 
-function DeliveryBanner({ orders, onStatusChange }: {
+function DeliveryBanner({ orders, onStatusChange, cronStatus, onRefresh, refreshing }: {
   orders: Order[];
   onStatusChange: (id: string, status: DeliveryStatus) => void;
+  cronStatus: { label: string; color: string; dot: string };
+  onRefresh: () => void;
+  refreshing: boolean;
 }) {
   const [confirmOrder, setConfirmOrder] = useState(null);
   const today = new Date();
@@ -72,10 +129,23 @@ function DeliveryBanner({ orders, onStatusChange }: {
       <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
         <Truck size={18} className="text-white" />
         <span className="text-white font-semibold text-sm">Livraisons à venir</span>
-        <div className="ml-auto flex items-center gap-3 text-xs text-blue-100">
+        <div className="ml-auto flex items-center gap-4 text-xs text-blue-100">
           {lateCount > 0     && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lateCount} en retard</span>}
           {todayCount > 0    && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />{todayCount} aujourd'hui</span>}
           {upcomingCount > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-300 inline-block" />{upcomingCount} à venir</span>}
+          <div className="flex items-center gap-2 pl-3 border-l border-white/20">
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cronStatus.dot}`} />
+            <span className={`hidden sm:inline ${cronStatus.color}`}>{cronStatus.label}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onRefresh(); }}
+              disabled={refreshing}
+              title="Rafraîchir maintenant"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-50 text-white"
+            >
+              <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{refreshing ? 'Refresh...' : 'Refresh'}</span>
+            </button>
+          </div>
         </div>
       </div>
       <div className="divide-y divide-gray-100">
@@ -155,6 +225,7 @@ function DeliveryBanner({ orders, onStatusChange }: {
 
 export function OrdersManager() {
   const { orders, loading, addOrder, deleteOrder, updateOrder, updateDeliveryStatus } = useOrders();
+  const { status: cronStatus, refreshing, triggerRefresh } = useCronStatus();
   const [showForm, setShowForm]             = useState(false);
   const [editingOrder, setEditingOrder]     = useState<Order | null>(null);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
@@ -207,7 +278,7 @@ export function OrdersManager() {
           </div>
         </div>
 
-        {!loading && <DeliveryBanner orders={orders} onStatusChange={updateDeliveryStatus} />}
+        {!loading && <DeliveryBanner orders={orders} onStatusChange={updateDeliveryStatus} cronStatus={cronStatus} onRefresh={triggerRefresh} refreshing={refreshing} />}
 
         {loading ? (
           <div className="text-center py-12">
