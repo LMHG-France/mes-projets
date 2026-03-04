@@ -140,7 +140,8 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
       }
       if (data.error) { setError(data.error); return; }
 
-      setSupplierName(data.supplier_name || '');
+      // Ne remplace le fournisseur que si pas encore rempli
+      if (!supplierName) setSupplierName(data.supplier_name || '');
       const normalizedItems = (data.items || []).map((item: OrderItem) => {
         let unitPrice = item.pricePerUnit;
         if (item.price_ttc && item.quantity > 1) {
@@ -151,7 +152,8 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
         }
         return { ...item, pricePerUnit: unitPrice, price_ttc: unitPrice };
       });
-      setItems(normalizedItems);
+      // Ajoute les nouveaux articles aux existants au lieu de remplacer
+      setItems(prev => [...prev, ...normalizedItems]);
 
       // Si le lien de suivi est extrait, lancer aussi l'extraction de date
       if (data.tracking_link) {
