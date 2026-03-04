@@ -112,10 +112,10 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
       return;
     }
     const multiplier = 1 - discountValue / 100;
-    setItems(items.map(item => ({
-      ...item,
-      pricePerUnit: parseFloat((item.pricePerUnit * multiplier).toFixed(2))
-    })));
+    setItems(items.map(item => {
+      const newPrice = parseFloat((item.pricePerUnit * multiplier).toFixed(2));
+      return { ...item, pricePerUnit: newPrice, price_ttc: newPrice, priceInput: String(newPrice) };
+    }));
     setDiscountInput('');
     setError(null);
   };
