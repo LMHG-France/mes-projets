@@ -88,7 +88,8 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
 
   const handlePriceInput = (index: number, value: string) => {
     const cleanValue = value.replace(',', '.');
-    if (value === '' || value === '.' || value === ',') {
+    // Saisies intermédiaires valides : vide, point/virgule seul, signe moins seul, "-0", "-0."
+    if (value === '' || value === '.' || value === ',' || value === '-' || value === '-.' || value === '-,') {
       const newItems = [...items];
       newItems[index] = { ...newItems[index], pricePerUnit: 0, price_ttc: 0, priceInput: value };
       setItems(newItems);
@@ -192,7 +193,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
     setError(null);
     if (!supplierName.trim()) { setError('Le nom du fournisseur est requis'); return; }
     if (items.length === 0)   { setError('Veuillez ajouter au moins un article'); return; }
-    if (items.some(item => !item.name.trim() || item.pricePerUnit <= 0)) {
+    if (items.some(item => !item.name.trim() || isNaN(item.pricePerUnit))) {
       setError('Tous les articles doivent avoir un nom et un prix valide');
       return;
     }
