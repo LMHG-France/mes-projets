@@ -78,7 +78,7 @@ function ConfirmModal({ message, onConfirm, onCancel, extraButton = null, confir
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Annuler</button>
           {extraButton}
-          <button onClick={onConfirm} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ${confirmColor === "blue" ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"}`}>Supprimer</button>
+          <button onClick={onConfirm} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ${confirmColor === "blue" ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"}`}>Confirmer</button>
         </div>
       </div>
     </div>
@@ -123,9 +123,9 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
   };
 
   const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
-  const lateCount     = deliveries.filter(d => d.diffDays < 0).length;
-  const todayCount    = deliveries.filter(d => d.diffDays === 0).length;
-  const upcomingCount = deliveries.filter(d => d.diffDays > 0).length;
+  const lateCount     = deliveries.filter(d => d.diffDays < 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'collected').length;
+  const todayCount    = deliveries.filter(d => d.diffDays === 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'collected').length;
+  const upcomingCount = deliveries.filter(d => d.diffDays > 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'collected').length;
 
   return (
     <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
