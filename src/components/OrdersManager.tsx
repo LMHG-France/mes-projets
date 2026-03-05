@@ -65,20 +65,20 @@ const STATUS_CONFIG = {
   collected: { label: 'Récupéré',      color: 'text-purple-700', bg: 'bg-purple-100', border: 'border-purple-300' },
 } as const;
 
-function ConfirmModal({ message, onConfirm, onCancel, extraButton = null }) {
+function ConfirmModal({ message, onConfirm, onCancel, extraButton = null, confirmColor = "red" }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-purple-100 p-2.5 rounded-xl"><CheckCheck size={20} className="text-purple-600" /></div>
+          <div className="bg-blue-100 p-2.5 rounded-xl"><CheckCheck size={20} className="text-blue-600" /></div>
           <h3 className="text-base font-semibold text-gray-900">Confirmation</h3>
         </div>
         <p className="text-sm text-gray-600 mb-6">{message}</p>
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Annuler</button>
           {extraButton}
-          <button onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 text-sm font-medium text-white hover:bg-purple-700 transition-colors">Confirmer</button>
+          <button onClick={onConfirm} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ${confirmColor === "blue" ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"}`}>Confirmer</button>
         </div>
       </div>
     </div>
@@ -222,6 +222,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
           message="Marquer ce colis comme récupéré ?"
           onConfirm={() => { onStatusChange(confirmOrder, "collected"); setConfirmOrder(null); }}
           onCancel={() => setConfirmOrder(null)}
+          confirmColor="blue"
         />
       )}
       {dismissOrder && (
@@ -232,7 +233,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
           extraButton={
             <button
               onClick={() => { onStatusChange(dismissOrder, 'collected'); setDismissOrder(null); }}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
             >
               Archiver
             </button>
