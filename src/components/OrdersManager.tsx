@@ -154,6 +154,8 @@ function DeliveryBanner({ orders, onStatusChange, cronStatus, onRefresh, refresh
           const statusCfg = STATUS_CONFIG[status];
           const urgency   = status === 'available'
             ? { text: 'En attente', dot: 'bg-blue-500' }
+            : status === 'delivered'
+            ? { text: 'Livré', dot: 'bg-green-500' }
             : getUrgency(diffDays);
           const firstItem = order.items?.[0];
           const itemCount = order.items?.length ?? 0;
