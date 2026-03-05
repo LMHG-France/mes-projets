@@ -65,7 +65,7 @@ const STATUS_CONFIG = {
   collected: { label: 'Récupéré',      color: 'text-purple-700', bg: 'bg-purple-100', border: 'border-purple-300' },
 } as const;
 
-function ConfirmModal({ message, onConfirm, onCancel }) {
+function ConfirmModal({ message, onConfirm, onCancel, extraButton = null }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
@@ -77,6 +77,7 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
         <p className="text-sm text-gray-600 mb-6">{message}</p>
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Annuler</button>
+          {extraButton}
           <button onClick={onConfirm} className="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 text-sm font-medium text-white hover:bg-purple-700 transition-colors">Confirmer</button>
         </div>
       </div>
@@ -84,14 +85,16 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   );
 }
 
-function DeliveryBanner({ orders, onStatusChange, cronStatus, onRefresh, refreshing }: {
+function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefresh, refreshing }: {
   orders: Order[];
   onStatusChange: (id: string, status: DeliveryStatus) => void;
+  onDelete: (id: string) => void;
   cronStatus: { label: string; color: string; dot: string };
   onRefresh: () => void;
   refreshing: boolean;
 }) {
   const [confirmOrder, setConfirmOrder] = useState(null);
+  const [dismissOrder, setDismissOrder] = useState<string | null>(null);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -205,8 +208,8 @@ function DeliveryBanner({ orders, onStatusChange, cronStatus, onRefresh, refresh
                     </span>
                   )}
                   {isDone && (
-                    <button onClick={(e) => { e.stopPropagation(); onStatusChange(order.id, 'pending'); }}
-                      className="text-xs text-gray-400 hover:text-gray-600 px-1" title="Réinitialiser">✕</button>
+                    <button onClick={(e) => { e.stopPropagation(); setDismissOrder(order.id); }}
+                      className="text-xs text-gray-400 hover:text-red-500 px-1 transition-colors" title="Retirer">✕</button>
                   )}
                 </div>
               </div>
@@ -219,6 +222,21 @@ function DeliveryBanner({ orders, onStatusChange, cronStatus, onRefresh, refresh
           message="Marquer ce colis comme récupéré ?"
           onConfirm={() => { onStatusChange(confirmOrder, "collected"); setConfirmOrder(null); }}
           onCancel={() => setConfirmOrder(null)}
+        />
+      )}
+      {dismissOrder && (
+        <ConfirmModal
+          message="Que souhaitez-vous faire avec cette commande ?"
+          onConfirm={() => { onDelete(dismissOrder); setDismissOrder(null); }}
+          onCancel={() => setDismissOrder(null)}
+          extraButton={
+            <button
+              onClick={() => { onStatusChange(dismissOrder, 'collected'); setDismissOrder(null); }}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Archiver
+            </button>
+          }
         />
       )}
     </div>
@@ -280,7 +298,7 @@ export function OrdersManager() {
           </div>
         </div>
 
-        {!loading && <DeliveryBanner orders={orders} onStatusChange={updateDeliveryStatus} cronStatus={cronStatus} onRefresh={triggerRefresh} refreshing={refreshing} />}
+        {!loading && <DeliveryBanner orders={orders} onStatusChange={updateDeliveryStatus} onDelete={deleteOrder} cronStatus={cronStatus} onRefresh={triggerRefresh} refreshing={refreshing} />}
 
         {loading ? (
           <div className="text-center py-12">
