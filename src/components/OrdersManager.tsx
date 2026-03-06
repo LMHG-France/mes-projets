@@ -1,189 +1,319 @@
-import { useMemo, useEffect, useState } from 'react';
-import { Package, Truck, MapPin, Home, Clock, CheckCircle, ExternalLink } from 'lucide-react';
-import { useOrders } from '../hooks/useOrders';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck, RefreshCw } from 'lucide-react';
+import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
+import { OrderForm } from './OrderForm';
+import { OrdersList } from './OrdersList';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
-import { Order } from '../hooks/useOrders';
+
+function useCronStatus() {
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [refreshing, setRefreshing]   = useState(false);
+
+  const fetchLastRefresh = useCallback(async () => {
+    const { data } = await supabase
+      .from('orders')
+      .select('delivery_date_updated_at')
+      .not('delivery_date_updated_at', 'is', null)
+      .order('delivery_date_updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data?.delivery_date_updated_at) setLastRefresh(new Date(data.delivery_date_updated_at));
+  }, []);
+
+  useEffect(() => { fetchLastRefresh(); }, [fetchLastRefresh]);
+
+  const triggerRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('id, tracking_link')
+        .not('tracking_link', 'is', null)
+        .neq('tracking_link', '')
+        .neq('delivery_status', 'collected');
+      await Promise.all((orders || []).map(o =>
+        fetch(`${supabaseUrl}/functions/v1/extract_delivery_date`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anonKey}` },
+          body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
+        })
+      ));
+      await fetchLastRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const getStatus = () => {
+    if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
+    const minAgo = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
+    if (minAgo < 45)  return { label: `Màj il y a ${minAgo} min`, color: 'text-green-300', dot: 'bg-green-400' };
+    if (minAgo < 120) return { label: `Màj il y a ${minAgo} min`, color: 'text-yellow-300', dot: 'bg-yellow-400' };
+    const hAgo = Math.round(minAgo / 60);
+    return { label: `Màj il y a ${hAgo}h`, color: 'text-red-300', dot: 'bg-red-400' };
+  };
+
+  return { status: getStatus(), refreshing, triggerRefresh };
+}
 
 const STATUS_CONFIG = {
-  pending:   { label: 'En transit',         color: 'text-blue-700',   bg: 'bg-blue-50',    border: 'border-blue-200',   dot: 'bg-blue-500' },
-  available: { label: 'Disponible au relais',color: 'text-indigo-700', bg: 'bg-indigo-50',  border: 'border-indigo-200', dot: 'bg-indigo-500' },
-  delivered: { label: 'Livré',               color: 'text-green-700',  bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500' },
-  collected: { label: 'Récupéré',            color: 'text-gray-500',   bg: 'bg-gray-50',    border: 'border-gray-200',   dot: 'bg-gray-400' },
-};
+  pending:   { label: 'En attente',    color: 'text-gray-500',   bg: 'bg-gray-100',   border: 'border-gray-200' },
+  delivered: { label: 'Livré',         color: 'text-green-700',  bg: 'bg-green-100',  border: 'border-green-300' },
+  available: { label: 'À disposition', color: 'text-blue-700',   bg: 'bg-blue-100',   border: 'border-blue-300' },
+  collected: { label: 'Récupéré',      color: 'text-purple-700', bg: 'bg-purple-100', border: 'border-purple-300' },
+} as const;
 
-export function StockManager() {
-  const { user } = useAuth();
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
-  const [loading, setLoading]     = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    setLoading(true);
-    // Inclut les commandes cachées dans "Commandes" (hidden_in_orders = true)
-    supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { setAllOrders(data || []); setLoading(false); });
-
-    // Realtime
-    const channel = supabase
-      .channel('stock_orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          if (payload.eventType === 'INSERT') setAllOrders(prev => [payload.new as Order, ...prev]);
-          if (payload.eventType === 'UPDATE') setAllOrders(prev => prev.map(o => o.id === payload.new.id ? payload.new as Order : o));
-          if (payload.eventType === 'DELETE') setAllOrders(prev => prev.filter(o => o.id !== payload.old.id));
-        }
-      ).subscribe();
-    return () => { channel.unsubscribe(); };
-  }, [user]);
-
-  // Toutes les commandes sauf "collected", triées par date décroissante
-  const pendingOrders = useMemo(() =>
-    allOrders
-      .filter(o => o.delivery_status !== 'collected')
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    [allOrders]
+function ConfirmModal({ message, onConfirm, onCancel, extraButton = null, confirmColor = "red" }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-blue-100 p-2.5 rounded-xl"><CheckCheck size={20} className="text-blue-600" /></div>
+          <h3 className="text-base font-semibold text-gray-900">Confirmation</h3>
+        </div>
+        <p className="text-sm text-gray-600 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Annuler</button>
+          {extraButton}
+          <button onClick={onConfirm} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ${confirmColor === "blue" ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"}`}>Confirmer</button>
+        </div>
+      </div>
+    </div>
   );
+}
 
-  const totalItems = useMemo(() =>
-    pendingOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0),
-    [pendingOrders]
+function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefresh, refreshing }: {
+  orders: Order[];
+  onStatusChange: (id: string, status: DeliveryStatus) => void;
+  onDelete: (id: string) => void;
+  cronStatus: { label: string; color: string; dot: string };
+  onRefresh: () => void;
+  refreshing: boolean;
+}) {
+  const [confirmOrder, setConfirmOrder] = useState(null);
+  const [dismissOrder, setDismissOrder] = useState<string | null>(null);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const deliveries = useMemo(() => {
+    return orders
+      .filter(o => o.expected_delivery_date && o.delivery_status !== 'collected')
+      .map(o => {
+        const date = new Date(o.expected_delivery_date!);
+        date.setHours(0, 0, 0, 0);
+        const diffDays = Math.round((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return { order: o, date, diffDays };
+      })
+      .filter(d => d.diffDays >= -3 || d.order.delivery_status === 'available')
+      .sort((a, b) => a.diffDays - b.diffDays)
+      .slice(0, 6);
+  }, [orders]);
+
+  if (deliveries.length === 0) return null;
+
+  const getUrgency = (diffDays: number) => {
+    if (diffDays < 0)   return { text: 'En retard',              dot: 'bg-red-500' };
+    if (diffDays === 0) return { text: "Aujourd'hui",             dot: 'bg-green-500' };
+    if (diffDays === 1) return { text: 'Demain',                  dot: 'bg-blue-500' };
+    if (diffDays <= 3)  return { text: `Dans ${diffDays}j`,       dot: 'bg-indigo-400' };
+    return               { text: `Dans ${diffDays}j`,             dot: 'bg-gray-400' };
+  };
+
+  const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+  const lateCount     = deliveries.filter(d => d.diffDays < 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'collected').length;
+  const todayCount    = deliveries.filter(d => d.diffDays === 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'collected').length;
+  const upcomingCount = deliveries.filter(d => d.diffDays > 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'collected').length;
+
+  return (
+    <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <Truck size={18} className="text-white" />
+        <span className="text-white font-semibold text-sm">Livraisons à venir</span>
+        <div className="ml-auto flex items-center gap-4 text-xs text-blue-100">
+          {lateCount > 0     && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lateCount} en retard</span>}
+          {todayCount > 0    && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />{todayCount} aujourd'hui</span>}
+          {upcomingCount > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-300 inline-block" />{upcomingCount} à venir</span>}
+          <div className="flex items-center gap-2 pl-3 border-l border-white/20">
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cronStatus.dot}`} />
+            <span className={`hidden sm:inline ${cronStatus.color}`}>{cronStatus.label}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onRefresh(); }}
+              disabled={refreshing}
+              title="Rafraîchir maintenant"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-50 text-white"
+            >
+              <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{refreshing ? 'Refresh...' : 'Refresh'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="divide-y divide-gray-100">
+        {deliveries.map(({ order, date, diffDays }) => {
+          const status    = (order.delivery_status ?? 'pending') as DeliveryStatus;
+          const statusCfg = STATUS_CONFIG[status];
+          const urgency   = status === 'available'
+            ? { text: 'En attente', dot: 'bg-blue-500' }
+            : status === 'delivered'
+            ? { text: 'Livré', dot: 'bg-green-500' }
+            : getUrgency(diffDays);
+          const firstItem = order.items?.[0];
+          const itemCount = order.items?.length ?? 0;
+          const isDone    = status === 'collected' || status === 'delivered';
+          return (
+            <div key={order.id} onClick={() => order.tracking_link && window.open(order.tracking_link, '_blank')} className={`px-5 py-3 transition-colors cursor-pointer ${isDone ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-50'}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${urgency.dot}`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{order.supplier_name}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {firstItem ? `${firstItem.quantity}x ${firstItem.name}` : '-'}
+                    {itemCount > 1 && ` +${itemCount - 1} autre${itemCount > 2 ? 's' : ''}`}
+                  </p>
+                </div>
+                <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
+                  <CalendarClock size={13} className="text-gray-400" />
+                  <span className="text-xs text-gray-500">{fmt(date)}</span>
+                </div>
+                <span className="text-xs font-medium text-gray-500 flex-shrink-0">{urgency.text}</span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {status === 'pending' && (
+                    <span className={order.delivery_type === 'pickup'
+                      ? 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-500 bg-blue-50'
+                      : 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-500 bg-gray-50'
+                    }>
+                      {order.delivery_type === 'pickup'
+                        ? <><MapPin size={11} /><span className="hidden sm:inline">Point relais</span></>
+                        : <><Home size={11} /><span className="hidden sm:inline">Domicile</span></>
+                      }
+                    </span>
+                  )}
+                  {status === 'available' && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 font-medium">
+                        <MapPin size={11} />Disponible au relais
+                      </span>
+                      <button onClick={(e) => { e.stopPropagation(); setConfirmOrder(order.id); }}
+                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
+                        <CheckCheck size={12} /><span className="hidden sm:inline">Récupéré</span>
+                      </button>
+                    </div>
+                  )}
+                  {isDone && status !== 'available' && (
+                    <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border font-medium ${statusCfg.color} ${statusCfg.bg} ${statusCfg.border}`}>
+                      {statusCfg.label}
+                    </span>
+                  )}
+                  {isDone && (
+                    <button onClick={(e) => { e.stopPropagation(); setDismissOrder(order.id); }}
+                      className="text-xs text-gray-400 hover:text-red-500 px-1 transition-colors" title="Retirer">✕</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {confirmOrder && (
+        <ConfirmModal
+          message="Marquer ce colis comme récupéré ?"
+          onConfirm={() => { onStatusChange(confirmOrder, "collected"); setConfirmOrder(null); }}
+          onCancel={() => setConfirmOrder(null)}
+          confirmColor="blue"
+        />
+      )}
+      {dismissOrder && (
+        <ConfirmModal
+          message="Que souhaitez-vous faire avec cette commande ?"
+          onConfirm={() => { onDelete(dismissOrder); setDismissOrder(null); }}
+          onCancel={() => setDismissOrder(null)}
+          extraButton={
+            <button
+              onClick={() => { onStatusChange(dismissOrder, 'collected'); setDismissOrder(null); }}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            >
+              Archiver
+            </button>
+          }
+        />
+      )}
+    </div>
   );
+}
 
-  const totalValue = useMemo(() =>
-    pendingOrders.reduce((sum, o) => sum + o.total_price, 0),
-    [pendingOrders]
-  );
+export function OrdersManager() {
+  const { orders, loading, addOrder, deleteOrder, updateOrder, updateDeliveryStatus } = useOrders();
+  const { status: cronStatus, refreshing, triggerRefresh } = useCronStatus();
+  const [showForm, setShowForm]             = useState(false);
+  const [editingOrder, setEditingOrder]     = useState<Order | null>(null);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
 
-  const fmt = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  const stats = useMemo(() => {
+    const src        = filteredOrders.length === 0 && orders.length > 0 ? orders : filteredOrders;
+    const totalValue = src.reduce((s, o) => s + o.total_price, 0);
+    const totalUnits = src.reduce((s, o) => s + o.items.reduce((si, i) => si + i.quantity, 0), 0);
+    return { totalValue, totalUnits, totalOrders: src.length };
+  }, [orders, filteredOrders]);
+
+  const handleAddOrder    = async (d: Omit<Order, 'id'|'created_at'|'updated_at'>) => { await addOrder(d); setShowForm(false); };
+  const handleEditOrder   = (o: Order) => { setEditingOrder(o); setShowForm(true); };
+  const handleUpdateOrder = async (d: Omit<Order, 'id'|'created_at'|'updated_at'>) => {
+    if (editingOrder) { await updateOrder(editingOrder.id, d); setEditingOrder(null); setShowForm(false); }
+  };
+  const handleCloseForm = () => { setShowForm(false); setEditingOrder(null); };
 
   return (
     <div className="py-8 px-4 lg:px-8">
       <div className="max-w-6xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <Package size={32} className="text-blue-600" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Stock en attente</h1>
-            <p className="text-gray-600 mt-1">Articles commandés en cours de livraison</p>
+            <h1 className="text-3xl font-bold text-gray-900">Mes Commandes</h1>
+            <p className="text-gray-600 mt-1">Gérez toutes vos commandes en un seul endroit</p>
           </div>
+          <button onClick={() => { setEditingOrder(null); setShowForm(true); }}
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+            <Plus size={20} />Ajouter une commande
+          </button>
         </div>
-
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6 flex items-center gap-4">
-            <div className="bg-blue-100 p-3 rounded-lg"><Package className="text-blue-600" size={22} /></div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Commandes actives</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingOrders.length}</p>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-blue-100 p-3 rounded-lg"><Euro className="text-blue-600" size={24} /></div>
+              <div><p className="text-sm text-gray-500 font-medium">Valeur totale</p><p className="text-2xl font-bold text-gray-900">{stats.totalValue.toFixed(2)} €</p></div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6 flex items-center gap-4">
-            <div className="bg-green-100 p-3 rounded-lg"><Truck className="text-green-600" size={22} /></div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Unités en transit</p>
-              <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-green-100 p-3 rounded-lg"><Package className="text-green-600" size={24} /></div>
+              <div><p className="text-sm text-gray-500 font-medium">Unités totales</p><p className="text-2xl font-bold text-gray-900">{stats.totalUnits}</p></div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6 flex items-center gap-4">
-            <div className="bg-orange-100 p-3 rounded-lg"><Clock className="text-orange-600" size={22} /></div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Valeur totale</p>
-              <p className="text-2xl font-bold text-gray-900">{totalValue.toFixed(2)} €</p>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-orange-100 p-3 rounded-lg"><ShoppingCart className="text-orange-600" size={24} /></div>
+              <div><p className="text-sm text-gray-500 font-medium">Nombre de commandes</p><p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p></div>
             </div>
           </div>
         </div>
 
-        {/* Liste */}
+        {!loading && <DeliveryBanner orders={orders} onStatusChange={updateDeliveryStatus} onDelete={deleteOrder} cronStatus={cronStatus} onRefresh={triggerRefresh} refreshing={refreshing} />}
+
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-            <p className="mt-4 text-gray-600">Chargement...</p>
-          </div>
-        ) : pendingOrders.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center text-gray-500">
-            <CheckCircle size={64} className="mx-auto mb-4 text-green-300" />
-            <p className="text-lg font-medium">Tout est à jour !</p>
-            <p className="text-sm mt-2">Aucune commande en attente de livraison</p>
+            <p className="mt-4 text-gray-600">Chargement des commandes...</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {pendingOrders.map(order => {
-              const status = order.delivery_status ?? 'pending';
-              const cfg    = STATUS_CONFIG[status];
-              const deliveryDate = order.expected_delivery_date
-                ? new Date(order.expected_delivery_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
-                : null;
-
-              return (
-                <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  {/* Header commande */}
-                  <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
-                      <div>
-                        <span className="font-semibold text-gray-900 text-sm">{order.supplier_name}</span>
-                        <span className="ml-2 text-xs text-gray-400">{fmt(order.created_at)}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {deliveryDate && (
-                        <span className="hidden sm:flex items-center gap-1 text-xs text-gray-500">
-                          <Clock size={12} />
-                          {deliveryDate}
-                        </span>
-                      )}
-                      {order.delivery_type === 'pickup'
-                        ? <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-600 bg-blue-50"><MapPin size={11} /><span className="hidden sm:inline">Point relais</span></span>
-                        : order.delivery_type === 'home'
-                        ? <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-500 bg-gray-50"><Home size={11} /><span className="hidden sm:inline">Domicile</span></span>
-                        : null
-                      }
-                      <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${cfg.color} ${cfg.bg} ${cfg.border}`}>
-                        {cfg.label}
-                      </span>
-                      {order.tracking_link && (
-                        <a href={order.tracking_link} target="_blank" rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()}
-                          className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
-                          <ExternalLink size={11} />
-                          <span className="hidden sm:inline">Suivi</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Articles */}
-                  <div className="divide-y divide-gray-50">
-                    {order.items.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between px-5 py-2.5">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span className="flex-shrink-0 text-xs font-bold text-white bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center">
-                            {item.quantity}
-                          </span>
-                          <span className="text-sm text-gray-800 truncate">{item.name}</span>
-                        </div>
-                        <span className="text-sm font-medium text-gray-600 flex-shrink-0 ml-4">
-                          {(item.quantity * (item.price_ttc ?? item.pricePerUnit)).toFixed(2)} €
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Footer total */}
-                  <div className="flex justify-between items-center px-5 py-2.5 bg-gray-50 border-t border-gray-200">
-                    <span className="text-xs text-gray-500">{order.items.length} article{order.items.length > 1 ? 's' : ''}</span>
-                    <span className="text-sm font-bold text-blue-600">{order.total_price.toFixed(2)} €</span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <OrdersList orders={orders} onEdit={handleEditOrder} onDelete={deleteOrder} isLoading={loading} onFilteredOrdersChange={setFilteredOrders} />
           </div>
+        )}
+
+        {showForm && (
+          <OrderForm onSubmit={editingOrder ? handleUpdateOrder : handleAddOrder} onClose={handleCloseForm} initialData={editingOrder || undefined} isLoading={loading} />
         )}
       </div>
     </div>
