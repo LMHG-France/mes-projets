@@ -71,6 +71,9 @@ export function useStock() {
   };
 
   const deleteItem = async (id: string) => {
+    // Suppression optimiste immédiate côté UI
+    setItems(prev => prev.filter(i => i.id !== id));
+    // Puis suppression en base
     await supabase.from('stock_items').delete().eq('id', id);
   };
 
