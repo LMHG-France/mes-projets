@@ -121,7 +121,7 @@ export function StockManager() {
               <p className="text-sm text-gray-400 mt-2">Aucune commande en attente de livraison</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {pendingOrders.map((order) => {
                 const status   = (order.delivery_status ?? 'pending') as keyof typeof STATUS_CONFIG;
                 const cfg      = STATUS_CONFIG[status];
@@ -140,7 +140,7 @@ export function StockManager() {
                   <div key={order.id} className="order-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
                     {/* Card header */}
-                    <div className="flex items-center gap-4 px-5 py-4 cursor-pointer select-none" style={{borderLeft:`3px solid ${cfg.dot}`}} onClick={() => toggleExpand(order.id)}>
+                    <div className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none" style={{borderLeft:`3px solid ${cfg.dot}`}} onClick={() => toggleExpand(order.id)}>
                       {/* Pulse dot */}
                       <div className="relative flex-shrink-0 w-3 h-3">
                         <div className="w-3 h-3 rounded-full pdot" style={{background:cfg.dot}} />
@@ -150,11 +150,11 @@ export function StockManager() {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-gray-900">{order.supplier_name}</span>
+                          <span className="font-semibold text-gray-900 text-sm">{order.supplier_name}</span>
                           <span className="text-xs text-gray-400 mono">{fmtFull(order.created_at)}</span>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">
-                          <span className="text-xs text-gray-400">{totalQty} unité{totalQty>1?'s':''} · {order.items.length} article{order.items.length>1?'s':''}</span>
+                          <span className="text-xs text-gray-400">{totalQty} unités · {order.items.length} articles</span>
                           {urgencyLabel && <span className={`text-xs ${urgencyColor}`}>{urgencyLabel}</span>}
                         </div>
                       </div>
@@ -193,29 +193,29 @@ export function StockManager() {
                         {order.items.map((item, idx) => {
                           const lineTotal = (item.quantity * (item.price_ttc ?? item.pricePerUnit)).toFixed(2);
                           return (
-                            <div key={idx} className="item-row flex items-center justify-between px-5 py-2.5 gap-4">
+                            <div key={idx} className="item-row flex items-center justify-between px-4 py-1.5 gap-4">
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white mono"
+                                <div className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold text-white mono"
                                   style={{background:`linear-gradient(135deg,${cfg.dot},${cfg.dot}99)`}}>
                                   {item.quantity}
                                 </div>
-                                <span className="text-sm text-gray-700 truncate">{item.name}</span>
+                                <span className="text-xs text-gray-700 truncate">{item.name}</span>
                               </div>
                               <div className="flex items-center gap-4 flex-shrink-0">
                                 {item.quantity > 1 && (
-                                  <span className="text-xs text-gray-400 mono hidden sm:inline">
-                                    {(item.price_ttc ?? item.pricePerUnit).toFixed(2)} € × {item.quantity}
+                                  <span className="text-xs text-gray-300 mono hidden sm:inline">
+                                    {(item.price_ttc ?? item.pricePerUnit).toFixed(2)}×{item.quantity}
                                   </span>
                                 )}
-                                <span className="text-sm font-semibold text-gray-900 mono w-20 text-right">{lineTotal} €</span>
+                                <span className="text-xs font-semibold text-gray-900 mono w-16 text-right">{lineTotal} €</span>
                               </div>
                             </div>
                           );
                         })}
                         {/* Total */}
-                        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-50" style={{background:`${cfg.dot}08`}}>
+                        <div className="flex items-center justify-between px-4 py-2 border-t border-gray-50" style={{background:`${cfg.dot}08`}}>
                           <span className="text-xs text-gray-400 font-medium">Total commande</span>
-                          <span className="text-base font-bold mono" style={{color:cfg.dot}}>{order.total_price.toFixed(2)} €</span>
+                          <span className="text-sm font-bold mono" style={{color:cfg.dot}}>{order.total_price.toFixed(2)} €</span>
                         </div>
                       </div>
                     )}
