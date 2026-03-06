@@ -58,7 +58,7 @@ function StockRow({ item, onUpdate, onDelete }: { item: any; onUpdate: (id: stri
   };
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors group">
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
       <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white jb bg-gradient-to-br from-blue-500 to-blue-400">
         {item.quantity}
       </div>
@@ -78,12 +78,117 @@ function StockRow({ item, onUpdate, onDelete }: { item: any; onUpdate: (id: stri
           <span className="text-sm font-semibold text-gray-900 jb w-16 text-right">
             {item.unit_price > 0 ? `${(item.quantity * item.unit_price).toFixed(2)} €` : '—'}
           </span>
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
-            <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Edit2 size={12} /></button>
-            <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={12} /></button>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors" title="Modifier"><Edit2 size={13} /></button>
+            <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Supprimer"><Trash2 size={13} /></button>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+
+// ── Import modal : choisir les produits à ajouter au stock ──
+function ImportModal({ order, onImport, onClose }: {
+  order: Order;
+  onImport: (items: { name: string; quantity: number; unit_price: number }[]) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [selected, setSelected] = useState<Record<number, boolean>>(
+    Object.fromEntries(order.items.map((_, i) => [i, true]))
+  );
+  const [quantities, setQuantities] = useState<Record<number, number>>(
+    Object.fromEntries(order.items.map((item, i) => [i, item.quantity]))
+  );
+  const [loading, setLoading] = useState(false);
+
+  const toggleAll = (val: boolean) =>
+    setSelected(Object.fromEntries(order.items.map((_, i) => [i, val])));
+
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+
+  const handleImport = async () => {
+    setLoading(true);
+    const toImport = order.items
+      .filter((_, i) => selected[i])
+      .map((item, i) => {
+        const originalIdx = order.items.indexOf(item);
+        return {
+          name: item.name,
+          quantity: quantities[originalIdx] || item.quantity,
+          unit_price: item.price_ttc ?? item.pricePerUnit,
+        };
+      });
+    await onImport(toImport);
+    setLoading(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.5)'}}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h3 className="font-bold text-gray-900">{order.supplier_name}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Sélectionnez les articles à ajouter au stock</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"><X size={18} /></button>
+        </div>
+
+        {/* Select all bar */}
+        <div className="flex items-center justify-between px-6 py-2.5 bg-gray-50 border-b border-gray-100">
+          <span className="text-xs text-gray-500 font-medium">{selectedCount} / {order.items.length} articles sélectionnés</span>
+          <div className="flex gap-2">
+            <button onClick={() => toggleAll(true)} className="text-xs px-3 py-1 rounded-lg bg-blue-100 text-blue-600 font-medium hover:bg-blue-200 transition-colors">Tout sélectionner</button>
+            <button onClick={() => toggleAll(false)} className="text-xs px-3 py-1 rounded-lg bg-gray-200 text-gray-500 font-medium hover:bg-gray-300 transition-colors">Aucun</button>
+          </div>
+        </div>
+
+        {/* Items list */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+          {order.items.map((item, i) => {
+            const unitPrice = item.price_ttc ?? item.pricePerUnit;
+            const isSelected = selected[i];
+            return (
+              <div key={i}
+                onClick={() => setSelected(prev => ({ ...prev, [i]: !prev[i] }))}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all"
+                style={{background: isSelected ? '#eff6ff' : '#f9fafb', border: `1px solid ${isSelected ? '#bfdbfe' : '#f3f4f6'}`}}>
+                {/* Checkbox */}
+                <div className="flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all"
+                  style={{borderColor: isSelected ? '#3b82f6' : '#d1d5db', background: isSelected ? '#3b82f6' : 'white'}}>
+                  {isSelected && <Check size={11} color="white" />}
+                </div>
+                {/* Quantity input */}
+                <input
+                  type="number"
+                  value={quantities[i]}
+                  min={1} max={item.quantity}
+                  onClick={e => e.stopPropagation()}
+                  onChange={e => setQuantities(prev => ({ ...prev, [i]: Math.min(item.quantity, Math.max(1, parseInt(e.target.value) || 1)) }))}
+                  className="w-12 px-2 py-1 text-xs border border-gray-200 rounded-lg jb text-center focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                />
+                {/* Name */}
+                <span className="flex-1 text-sm text-gray-700 truncate">{item.name}</span>
+                {/* Price */}
+                <span className="text-xs text-gray-400 jb flex-shrink-0">{unitPrice.toFixed(2)} €/u</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100">
+          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 transition-colors">Annuler</button>
+          <button onClick={handleImport} disabled={loading || selectedCount === 0}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50">
+            {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus size={15} />}
+            Ajouter {selectedCount > 0 ? `${selectedCount} article${selectedCount > 1 ? 's' : ''}` : ''} au stock
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -96,7 +201,7 @@ export function StockManager() {
   const [selected, setSelected]   = useState<string | null>(null);
   const [tab, setTab]             = useState<'transit' | 'stock'>('transit');
   const [showAdd, setShowAdd]     = useState(false);
-  const [importingOrder, setImportingOrder] = useState<string | null>(null);
+  const [importModalOrder, setImportModalOrder] = useState<Order | null>(null);
 
   const { items: stockItems, loading: loadingStock, addItem, addFromOrder, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
 
@@ -127,10 +232,10 @@ export function StockManager() {
   const fmtLong  = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const daysLeft = (d: string) => { const t = new Date(); t.setHours(0,0,0,0); const x = new Date(d); x.setHours(0,0,0,0); return Math.round((x.getTime()-t.getTime())/86400000); };
 
-  const handleImport = async (order: Order) => {
-    setImportingOrder(order.id);
-    await addFromOrder(order.items, order.id);
-    setImportingOrder(null);
+  const handleImportItems = async (items: { name: string; quantity: number; unit_price: number }[]) => {
+    for (const item of items) {
+      await addItem({ name: item.name, quantity: item.quantity, unit_price: item.unit_price, source_order_id: importModalOrder?.id });
+    }
     setTab('stock');
   };
 
@@ -265,9 +370,9 @@ export function StockManager() {
                               </a>
                             )}
                             {/* Import vers stock */}
-                            <button onClick={() => handleImport(selectedOrder)} disabled={importingOrder === selectedOrder.id}
-                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition-colors disabled:opacity-50">
-                              {importingOrder === selectedOrder.id ? '…' : <><Plus size={11}/>Ajouter au stock</>}
+                            <button onClick={() => setImportModalOrder(selectedOrder)}
+                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition-colors">
+                              <Plus size={11}/>Ajouter au stock
                             </button>
                           </div>
                         </div>
@@ -368,6 +473,15 @@ export function StockManager() {
           )}
         </div>
       </div>
+
+      {/* Import modal */}
+      {importModalOrder && (
+        <ImportModal
+          order={importModalOrder}
+          onImport={handleImportItems}
+          onClose={() => setImportModalOrder(null)}
+        />
+      )}
     </>
   );
 }
