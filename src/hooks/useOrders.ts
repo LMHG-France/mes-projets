@@ -22,6 +22,7 @@ export interface Order {
   expected_delivery_date: string | null;
   delivery_status: DeliveryStatus;
   delivery_type: string | null;
+  hidden_in_orders: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -46,7 +47,11 @@ export function useOrders() {
               return [payload.new as Order, ...prev];
             });
           } else if (payload.eventType === 'UPDATE') {
-            setOrders(prev => prev.map(o => o.id === payload.new.id ? payload.new as Order : o));
+            if (payload.new.hidden_in_orders) {
+              setOrders(prev => prev.filter(o => o.id !== payload.new.id));
+            } else {
+              setOrders(prev => prev.map(o => o.id === payload.new.id ? payload.new as Order : o));
+            }
           } else if (payload.eventType === 'DELETE') {
             setOrders(prev => prev.filter(o => o.id !== payload.old.id));
           }
@@ -55,12 +60,14 @@ export function useOrders() {
     return () => { channel.unsubscribe(); };
   }, [user]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (includeHidden = false) => {
     if (!user) return;
     try {
       setLoading(true);
-      const { data, error: err } = await supabase
+      let query = supabase
         .from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+      if (!includeHidden) query = query.eq('hidden_in_orders', false);
+      const { data, error: err } = await query;
       if (err) throw err;
       setOrders(data || []);
       setError(null);
@@ -89,7 +96,8 @@ export function useOrders() {
 
   const deleteOrder = async (orderId: string) => {
     try {
-      const { error: err } = await supabase.from('orders').delete().eq('id', orderId);
+      // Soft delete : masque dans "Commandes" mais conserve dans "Stock en attente"
+      const { error: err } = await supabase.from('orders').update({ hidden_in_orders: true }).eq('id', orderId);
       if (err) throw err;
       setOrders(prev => prev.filter(o => o.id !== orderId));
     } catch (err) { throw err instanceof Error ? err : new Error('Failed to delete order'); }
