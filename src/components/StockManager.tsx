@@ -88,24 +88,28 @@ export function StockManager() {
         <div className="max-w-6xl mx-auto px-4 py-8">
 
           {/* ── Top bar ── */}
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <p className="text-xs font-semibold tracking-widest text-blue-400 uppercase jb mb-1">Inventaire</p>
-              <h1 className="text-3xl font-bold text-gray-900">Stock en attente</h1>
-            </div>
-            {/* KPIs inline */}
-            <div className="hidden md:flex items-center gap-6">
-              {[
-                { label: 'Commandes', val: pending.length, color: '#3b82f6' },
-                { label: 'Unités',    val: totalUnits,     color: '#10b981' },
-                { label: 'Valeur',    val: `${totalValue.toFixed(2)} €`, color: '#f59e0b' },
-              ].map((k,i) => (
-                <div key={i} className="text-right">
-                  <p className="text-xs text-gray-400 font-medium">{k.label}</p>
-                  <p className="text-xl font-bold jb" style={{color:k.color}}>{k.val}</p>
+          <div className="mb-6">
+            <p className="text-xs font-semibold tracking-widest text-blue-400 uppercase jb mb-1">Inventaire</p>
+            <h1 className="text-3xl font-bold text-gray-900">Stock en attente</h1>
+          </div>
+
+          {/* ── Stat cards ── */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[
+              { label: 'Valeur totale',        val: `${totalValue.toFixed(2)} €`, icon: '€', iconBg: '#eff6ff', iconColor: '#3b82f6', bar: '#3b82f6' },
+              { label: 'Unités totales',        val: String(totalUnits),           icon: '📦', iconBg: '#ecfdf5', iconColor: '#10b981', bar: '#10b981' },
+              { label: 'Nombre de commandes',   val: String(pending.length),       icon: '🛒', iconBg: '#fff7ed', iconColor: '#f59e0b', bar: '#f59e0b' },
+            ].map((s, i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{background: s.iconBg}}>
+                  {s.icon}
                 </div>
-              ))}
-            </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-400 font-medium truncate">{s.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 jb mt-0.5">{s.val}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {pending.length === 0 ? (
