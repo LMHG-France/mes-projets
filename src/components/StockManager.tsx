@@ -1,6 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Package, Truck, MapPin, Home, Clock, CheckCircle, ExternalLink } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+import { Order } from '../hooks/useOrders';
 
 const STATUS_CONFIG = {
   pending:   { label: 'En transit',         color: 'text-blue-700',   bg: 'bg-blue-50',    border: 'border-blue-200',   dot: 'bg-blue-500' },
@@ -10,14 +13,40 @@ const STATUS_CONFIG = {
 };
 
 export function StockManager() {
-  const { orders, loading } = useOrders();
+  const { user } = useAuth();
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [loading, setLoading]     = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    // Inclut les commandes cachées dans "Commandes" (hidden_in_orders = true)
+    supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { setAllOrders(data || []); setLoading(false); });
+
+    // Realtime
+    const channel = supabase
+      .channel('stock_orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') setAllOrders(prev => [payload.new as Order, ...prev]);
+          if (payload.eventType === 'UPDATE') setAllOrders(prev => prev.map(o => o.id === payload.new.id ? payload.new as Order : o));
+          if (payload.eventType === 'DELETE') setAllOrders(prev => prev.filter(o => o.id !== payload.old.id));
+        }
+      ).subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [user]);
 
   // Toutes les commandes sauf "collected", triées par date décroissante
   const pendingOrders = useMemo(() =>
-    orders
+    allOrders
       .filter(o => o.delivery_status !== 'collected')
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    [orders]
+    [allOrders]
   );
 
   const totalItems = useMemo(() =>
