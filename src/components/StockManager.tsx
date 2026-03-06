@@ -122,7 +122,7 @@ export function StockManager() {
             <div className="flex gap-4 items-start">
 
               {/* ── LEFT: order list ── */}
-              <div className="w-72 flex-shrink-0 bg-white rounded-2xl shadow-sm p-2 flex flex-col gap-1">
+              <div className="w-96 flex-shrink-0 bg-white rounded-2xl shadow-sm p-2 flex flex-col gap-1">
                 {pending.map((order, idx) => {
                   const st  = (order.delivery_status ?? 'pending') as keyof typeof STATUS;
                   const cfg = STATUS[st];
