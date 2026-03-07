@@ -243,8 +243,15 @@ export function StockManager() {
   const daysLeft = (d: string) => { const t = new Date(); t.setHours(0,0,0,0); const x = new Date(d); x.setHours(0,0,0,0); return Math.round((x.getTime()-t.getTime())/86400000); };
 
   const handleImportItems = async (items: { name: string; quantity: number; unit_price: number }[]) => {
+    const orderId = importModalOrder?.id;
     for (const item of items) {
-      await addItem({ name: item.name, quantity: item.quantity, unit_price: item.unit_price, source_order_id: importModalOrder?.id });
+      await addItem({ name: item.name, quantity: item.quantity, unit_price: item.unit_price, source_order_id: orderId });
+    }
+    // Masquer la commande de "En transit" après import
+    if (orderId) {
+      await supabase.from('orders').update({ hidden_in_stock: true }).eq('id', orderId);
+      setAllOrders(prev => prev.filter(o => o.id !== orderId));
+      setSelected(null);
     }
     setTab('stock');
   };
