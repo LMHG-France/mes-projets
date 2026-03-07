@@ -7,7 +7,7 @@ import { useStock } from '../hooks/useStock';
 
 const STATUS = {
   pending:   { label: 'En transit',  color: '#3b82f6', bg: '#eff6ff', pulse: true  },
-  available: { label: 'Au relais',   color: '#8b5cf6', bg: '#f5f3ff', pulse: true  },
+  available: { label: 'Au relais',   color: '#f59e0b', bg: '#fffbeb', pulse: true  },
   delivered: { label: 'Livré',       color: '#10b981', bg: '#ecfdf5', pulse: false },
   collected: { label: 'Récupéré',    color: '#9ca3af', bg: '#f9fafb', pulse: false },
 };
@@ -363,14 +363,14 @@ export function StockManager() {
                   const dl  = selectedOrder.expected_delivery_date ? daysLeft(selectedOrder.expected_delivery_date) : null;
                   return (
                     <div key={selectedOrder.id} className="flex-1 detail-panel space-y-3">
-                      <div className="bg-white rounded-2xl shadow-sm p-5" style={{borderTop:`3px solid ${cfg.color}`}}>
+                      <div className="bg-white rounded-2xl shadow-sm p-5" style={{borderTop:`3px solid #3b82f6`}}>
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
                             <h2 className="text-xl font-bold text-gray-900">{selectedOrder.supplier_name}</h2>
                             <p className="text-sm text-gray-400 mt-0.5">Commandé le {fmtLong(selectedOrder.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            {selectedOrder.delivery_type==='pickup' ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border" style={{color:'#8b5cf6',borderColor:'#ddd6fe',background:'#f5f3ff'}}><MapPin size={11}/>Point relais</span>
+                            {selectedOrder.delivery_type==='pickup' ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50"><MapPin size={11}/>Point relais</span>
                               : selectedOrder.delivery_type==='home' ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 bg-gray-50"><Home size={11}/>Domicile</span> : null}
                             <span className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{color:cfg.color,background:cfg.bg}}>{cfg.label}</span>
                             {selectedOrder.tracking_link && (
@@ -403,7 +403,7 @@ export function StockManager() {
                           )}
                           <div className="ml-auto text-right">
                             <p className="text-xs text-gray-400">Total</p>
-                            <p className="text-2xl font-bold jb" style={{color:cfg.color}}>{selectedOrder.total_price.toFixed(2)} €</p>
+                            <p className="text-2xl font-bold jb text-blue-600">{selectedOrder.total_price.toFixed(2)} €</p>
                           </div>
                         </div>
                       </div>
@@ -418,7 +418,7 @@ export function StockManager() {
                             const unit = (item.price_ttc??item.pricePerUnit).toFixed(2);
                             return (
                               <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors">
-                                <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white jb" style={{background:`linear-gradient(135deg,${cfg.color},${cfg.color}bb)`}}>{item.quantity}</div>
+                                <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white jb" style={{background:"linear-gradient(135deg,#3b82f6,#60a5fa)"}}>{item.quantity}</div>
                                 <span className="flex-1 text-sm text-gray-700 truncate">{item.name}</span>
                                 <div className="flex items-center gap-3 flex-shrink-0">
                                   {item.quantity>1&&<span className="text-xs text-gray-300 jb hidden sm:inline">{unit}×{item.quantity}</span>}
