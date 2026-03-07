@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState, useCallback } from 'react';
 import { Package, Truck, MapPin, Home, Clock, ExternalLink, CheckCircle, ChevronRight, Box, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Order, useOrders } from '../hooks/useOrders';
+import { Order } from '../hooks/useOrders';
 import { useStock } from '../hooks/useStock';
 
 const STATUS = {
@@ -203,12 +203,13 @@ export function StockManager() {
   const [showAdd, setShowAdd]     = useState(false);
   const [importModalOrder, setImportModalOrder] = useState<Order | null>(null);
 
-  const { deleteOrder } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, addFromOrder, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
   const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<string | null>(null);
 
   const handleDeleteOrder = async (orderId: string) => {
-    await deleteOrder(orderId);
+    // Soft delete indépendant : masque uniquement dans "Stock en attente"
+    // La commande reste visible dans "Commandes"
+    await supabase.from('orders').update({ hidden_in_stock: true }).eq('id', orderId);
     setAllOrders(prev => prev.filter(o => o.id !== orderId));
     setSelected(null);
     setConfirmDeleteOrder(null);
@@ -217,12 +218,12 @@ export function StockManager() {
   useEffect(() => {
     if (!user) return;
     setLoadingOrders(true);
-    supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+    supabase.from('orders').select('*').eq('user_id', user.id).eq('hidden_in_stock', false).order('created_at', { ascending: false })
       .then(({ data }) => { const o = data || []; setAllOrders(o); setLoadingOrders(false); if (o.length) setSelected(o[0].id); });
     const ch = supabase.channel('stock_orders_v4')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (p) => {
         if (p.eventType === 'INSERT') setAllOrders(prev => [p.new as Order, ...prev]);
-        if (p.eventType === 'UPDATE') setAllOrders(prev => prev.map(o => o.id === p.new.id ? p.new as Order : o));
+        if (p.eventType === 'UPDATE') setAllOrders(prev => p.new.hidden_in_stock ? prev.filter(o => o.id !== p.new.id) : prev.map(o => o.id === p.new.id ? p.new as Order : o));
         if (p.eventType === 'DELETE') setAllOrders(prev => prev.filter(o => o.id !== p.old.id));
       }).subscribe();
     return () => { ch.unsubscribe(); };
