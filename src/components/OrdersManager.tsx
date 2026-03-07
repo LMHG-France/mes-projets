@@ -99,17 +99,33 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
   today.setHours(0, 0, 0, 0);
 
   const deliveries = useMemo(() => {
-    return orders
-      .filter(o => o.expected_delivery_date && o.delivery_status !== 'collected')
+    const activeOrders = orders.filter(o => o.delivery_status !== 'collected');
+
+    // 1. Commandes avec date de livraison
+    const withDate = activeOrders
+      .filter(o => o.expected_delivery_date)
       .map(o => {
         const date = new Date(o.expected_delivery_date!);
         date.setHours(0, 0, 0, 0);
         const diffDays = Math.round((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        return { order: o, date, diffDays };
+        return { order: o, date, diffDays, noTracking: false };
       })
       .filter(d => d.diffDays >= -3 || d.order.delivery_status === 'available')
       .sort((a, b) => a.diffDays - b.diffDays)
       .slice(0, 6);
+
+    const withDateIds = new Set(withDate.map(d => d.order.id));
+
+    // 2. Toutes les commandes actives sans date (peu importe le lien de suivi)
+    const withoutDate = activeOrders
+      .filter(o =>
+        !o.expected_delivery_date &&
+        o.delivery_status !== 'delivered' &&
+        !withDateIds.has(o.id)
+      )
+      .map(o => ({ order: o, date: null as any, diffDays: 999, noTracking: !o.tracking_link }));
+
+    return [...withDate, ...withoutDate];
   }, [orders]);
 
   if (deliveries.length === 0) return null;
@@ -152,10 +168,12 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
         </div>
       </div>
       <div className="divide-y divide-gray-100">
-        {deliveries.map(({ order, date, diffDays }) => {
+        {deliveries.map(({ order, date, diffDays, noTracking }) => {
           const status    = (order.delivery_status ?? 'pending') as DeliveryStatus;
           const statusCfg = STATUS_CONFIG[status];
-          const urgency   = status === 'available'
+          const urgency   = noTracking
+            ? { text: 'En attente du lien de suivi', dot: 'bg-gray-400' }
+            : status === 'available'
             ? { text: 'En attente', dot: 'bg-blue-500' }
             : status === 'delivered'
             ? { text: 'Livré', dot: 'bg-green-500' }
@@ -176,11 +194,11 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
                 </div>
                 <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
                   <CalendarClock size={13} className="text-gray-400" />
-                  <span className="text-xs text-gray-500">{fmt(date)}</span>
+                  <span className="text-xs text-gray-500">{date ? fmt(date) : '—'}</span>
                 </div>
                 <span className="text-xs font-medium text-gray-500 flex-shrink-0">{urgency.text}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {status === 'pending' && (
+                  {status === 'pending' && !noTracking && (
                     <span className={order.delivery_type === 'pickup'
                       ? 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-500 bg-blue-50'
                       : 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-500 bg-gray-50'
