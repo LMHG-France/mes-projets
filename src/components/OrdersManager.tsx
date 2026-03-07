@@ -110,9 +110,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
         const diffDays = Math.round((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return { order: o, date, diffDays, noTracking: false };
       })
-      .filter(d => d.diffDays >= -3 || d.order.delivery_status === 'available')
-      .sort((a, b) => a.diffDays - b.diffDays)
-      .slice(0, 6);
+      .sort((a, b) => a.diffDays - b.diffDays);
 
     const withDateIds = new Set(withDate.map(d => d.order.id));
 
