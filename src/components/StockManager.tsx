@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
-import { Package, Truck, MapPin, Home, Clock, ExternalLink, CheckCircle, ChevronRight, Box, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Package, Truck, MapPin, Home, Clock, ExternalLink, CheckCircle, ChevronRight, Box, Plus, Trash2, Edit2, Check, X, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Order } from '../hooks/useOrders';
@@ -201,6 +201,8 @@ export function StockManager() {
   const [selected, setSelected]   = useState<string | null>(null);
   const [tab, setTab]             = useState<'transit' | 'stock'>('transit');
   const [showAdd, setShowAdd]     = useState(false);
+  const [search, setSearch]       = useState('');
+  const [sortBy, setSortBy]       = useState<'name' | 'price_asc' | 'price_desc' | 'qty_asc' | 'qty_desc' | 'value_desc' | 'value_asc'>('name');
   const [importModalOrder, setImportModalOrder] = useState<Order | null>(null);
 
   const { items: stockItems, loading: loadingStock, addItem, addFromOrder, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
@@ -237,6 +239,24 @@ export function StockManager() {
   const transitUnits = useMemo(() => pending.reduce((s, o) => s + o.items.reduce((si, i) => si + i.quantity, 0), 0), [pending]);
   const transitValue = useMemo(() => pending.reduce((s, o) => s + o.total_price, 0), [pending]);
   const selectedOrder = pending.find(o => o.id === selected) ?? pending[0] ?? null;
+
+  const filteredStock = useMemo(() => {
+    let items = [...stockItems];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      items = items.filter(i => i.name.toLowerCase().includes(q));
+    }
+    switch (sortBy) {
+      case 'name':       items.sort((a,b) => a.name.localeCompare(b.name)); break;
+      case 'price_asc':  items.sort((a,b) => a.unit_price - b.unit_price); break;
+      case 'price_desc': items.sort((a,b) => b.unit_price - a.unit_price); break;
+      case 'qty_asc':    items.sort((a,b) => a.quantity - b.quantity); break;
+      case 'qty_desc':   items.sort((a,b) => b.quantity - a.quantity); break;
+      case 'value_asc':  items.sort((a,b) => (a.quantity*a.unit_price) - (b.quantity*b.unit_price)); break;
+      case 'value_desc': items.sort((a,b) => (b.quantity*b.unit_price) - (a.quantity*a.unit_price)); break;
+    }
+    return items;
+  }, [stockItems, search, sortBy]);
 
   const fmtShort = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
   const fmtLong  = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -445,18 +465,45 @@ export function StockManager() {
 
           {/* ── TAB: MON STOCK ── */}
           {tab === 'stock' && (
-            <div className="space-y-4">
-              {/* Add form toggle */}
-              {showAdd ? (
+            <div className="space-y-3">
+
+              {/* Search + sort bar */}
+              <div className="flex gap-2 flex-wrap">
+                <div className="relative flex-1 min-w-48">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Rechercher un produit..."
+                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+                  />
+                  {search && (
+                    <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+                <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
+                  className="px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-gray-600 cursor-pointer">
+                  <option value="name">Nom (A→Z)</option>
+                  <option value="qty_desc">Unités ↓</option>
+                  <option value="qty_asc">Unités ↑</option>
+                  <option value="price_desc">Prix unitaire ↓</option>
+                  <option value="price_asc">Prix unitaire ↑</option>
+                  <option value="value_desc">Valeur totale ↓</option>
+                  <option value="value_asc">Valeur totale ↑</option>
+                </select>
+                <button onClick={() => setShowAdd(v => !v)}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition-all ${showAdd ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                  <Plus size={15} /> Ajouter
+                </button>
+              </div>
+
+              {/* Add form */}
+              {showAdd && (
                 <AddItemForm
                   onAdd={async (name, qty, price) => { await addItem({ name, quantity: qty, unit_price: price }); setShowAdd(false); }}
                   onCancel={() => setShowAdd(false)}
                 />
-              ) : (
-                <button onClick={() => setShowAdd(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-dashed border-blue-200 text-blue-500 text-sm font-medium hover:border-blue-400 hover:bg-blue-50 transition-all w-full justify-center">
-                  <Plus size={16} /> Ajouter un article manuellement
-                </button>
               )}
 
               {/* Stock list */}
@@ -466,8 +513,8 @@ export function StockManager() {
                 </div>
               ) : stockItems.length === 0 ? (
                 <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
-                  <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package size={32} className="text-purple-300" />
+                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package size={32} className="text-blue-300" />
                   </div>
                   <p className="text-lg font-semibold text-gray-700">Stock vide</p>
                   <p className="text-sm text-gray-400 mt-1">Ajoutez des articles manuellement ou importez depuis une commande livrée</p>
@@ -475,19 +522,28 @@ export function StockManager() {
               ) : (
                 <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                   <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Références en stock</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Références en stock</p>
+                      {search && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 font-medium">{filteredStock.length} résultat{filteredStock.length !== 1 ? 's' : ''}</span>}
+                    </div>
                     <div className="flex items-center gap-4">
                       <span className="text-xs text-gray-400 jb">{stockUnits} unités</span>
                       <span className="text-sm font-bold jb text-blue-600">{stockValue.toFixed(2)} €</span>
                     </div>
                   </div>
-                  <div className="p-3 space-y-0.5">
-                    {stockItems.map((item, idx) => (
-                      <div key={item.id} className="stock-item" style={{animationDelay:`${idx*30}ms`}}>
-                        <StockRow item={item} onUpdate={updateItem} onDelete={deleteItem} />
-                      </div>
-                    ))}
-                  </div>
+                  {filteredStock.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <p className="text-sm text-gray-400">Aucun résultat pour "<span className="font-medium text-gray-600">{search}</span>"</p>
+                    </div>
+                  ) : (
+                    <div className="p-3 space-y-0.5">
+                      {filteredStock.map((item, idx) => (
+                        <div key={item.id} className="stock-item" style={{animationDelay:`${idx*20}ms`}}>
+                          <StockRow item={item} onUpdate={updateItem} onDelete={deleteItem} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
