@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState, useCallback } from 'react';
 import { Package, Truck, MapPin, Home, Clock, ExternalLink, CheckCircle, ChevronRight, Box, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Order } from '../hooks/useOrders';
+import { Order, useOrders } from '../hooks/useOrders';
 import { useStock } from '../hooks/useStock';
 
 const STATUS = {
@@ -203,7 +203,16 @@ export function StockManager() {
   const [showAdd, setShowAdd]     = useState(false);
   const [importModalOrder, setImportModalOrder] = useState<Order | null>(null);
 
+  const { deleteOrder } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, addFromOrder, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
+  const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<string | null>(null);
+
+  const handleDeleteOrder = async (orderId: string) => {
+    await deleteOrder(orderId);
+    setAllOrders(prev => prev.filter(o => o.id !== orderId));
+    setSelected(null);
+    setConfirmDeleteOrder(null);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -374,6 +383,10 @@ export function StockManager() {
                               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition-colors">
                               <Plus size={11}/>Ajouter au stock
                             </button>
+                            <button onClick={() => setConfirmDeleteOrder(selectedOrder.id)}
+                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors">
+                              <Trash2 size={11}/>Supprimer
+                            </button>
                           </div>
                         </div>
                         <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-50 flex-wrap">
@@ -473,6 +486,33 @@ export function StockManager() {
           )}
         </div>
       </div>
+
+      {/* Confirm delete order modal */}
+      {confirmDeleteOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.5)'}}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 size={18} className="text-red-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">Supprimer la commande ?</p>
+                <p className="text-xs text-gray-400 mt-0.5">Cette action est irréversible</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button onClick={() => setConfirmDeleteOrder(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+                Annuler
+              </button>
+              <button onClick={() => handleDeleteOrder(confirmDeleteOrder)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors">
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Import modal */}
       {importModalOrder && (
