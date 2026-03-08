@@ -356,9 +356,10 @@ export function InventairePage() {
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         .inv-page * { box-sizing: border-box; }
-        .inv-page { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size:14px; }
-        .jb { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+        .inv-page { font-family:'Inter',ui-sans-serif,system-ui,sans-serif; font-size:14px; -webkit-font-smoothing:antialiased; }
+        .jb { font-family:'Inter',ui-sans-serif,system-ui,sans-serif; }
         @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
         @keyframes pring{0%{transform:scale(.9);opacity:.6}100%{transform:scale(2.4);opacity:0}}
         @keyframes fadein{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
