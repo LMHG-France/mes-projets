@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 function useCronStatus() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing]   = useState(false);
+  const [, setTick] = useState(0); // force re-render every minute to update label
 
   const fetchLastRefresh = useCallback(async () => {
     const { data } = await supabase
@@ -20,7 +21,27 @@ function useCronStatus() {
     if (data?.delivery_date_updated_at) setLastRefresh(new Date(data.delivery_date_updated_at));
   }, []);
 
-  useEffect(() => { fetchLastRefresh(); }, [fetchLastRefresh]);
+  useEffect(() => {
+    fetchLastRefresh();
+
+    // Re-check timestamp every minute so label stays accurate
+    const tickInterval = setInterval(() => {
+      setTick(t => t + 1);
+      fetchLastRefresh();
+    }, 60000);
+
+    // Realtime: when cron updates delivery_date_updated_at, re-fetch immediately
+    const ch = supabase.channel('cron_status_watch')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
+        fetchLastRefresh();
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(tickInterval);
+      ch.unsubscribe();
+    };
+  }, [fetchLastRefresh]);
 
   const triggerRefresh = async () => {
     setRefreshing(true);
@@ -93,7 +114,6 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
   onRefresh: () => void;
   refreshing: boolean;
 }) {
-  const [confirmOrder, setConfirmOrder] = useState(null);
   const [dismissOrder, setDismissOrder] = useState<string | null>(null);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -212,10 +232,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
                       <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 font-medium">
                         <MapPin size={11} />Disponible au relais
                       </span>
-                      <button onClick={(e) => { e.stopPropagation(); setConfirmOrder(order.id); }}
-                        className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
-                        <CheckCheck size={12} /><span className="hidden sm:inline">Récupéré</span>
-                      </button>
+
                     </div>
                   )}
                   {isDone && status !== 'available' && (
@@ -233,14 +250,6 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
           );
         })}
       </div>
-      {confirmOrder && (
-        <ConfirmModal
-          message="Marquer ce colis comme récupéré ?"
-          onConfirm={() => { onStatusChange(confirmOrder, "collected"); setConfirmOrder(null); }}
-          onCancel={() => setConfirmOrder(null)}
-          confirmColor="blue"
-        />
-      )}
       {dismissOrder && (
         <ConfirmModal
           message="Que souhaitez-vous faire avec cette commande ?"
