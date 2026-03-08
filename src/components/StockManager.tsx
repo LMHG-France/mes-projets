@@ -367,10 +367,10 @@ export function StockManager() {
                             <div className="flex items-center justify-between mt-0.5">
                               <p className="text-xs text-gray-400">{qty} unités</p>
                               {dl !== null ? (
-                                <p className={`text-xs jb font-medium ${dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
-                                  {dl < 0 ? `${Math.abs(dl)}j retard` : dl === 0 ? 'Auj.' : `J-${dl}`}
+                                <p className={`text-xs jb font-medium ${dl < 0 && st !== 'available' && st !== 'delivered' ? 'text-red-400' : dl === 0 && st !== 'available' ? 'text-emerald-500' : 'text-gray-400'}`}>
+                                  {dl < 0 && st !== 'available' && st !== 'delivered' ? `${Math.abs(dl)}j retard` : dl === 0 && st !== 'available' ? 'Auj.' : st === 'available' ? 'Au relais' : `J-${dl}`}
                                 </p>
-                              ) : <p className="text-xs text-gray-300">—</p>}
+                              ) : <p className="text-xs text-gray-300">{st === 'available' ? 'Au relais' : '—'}</p>}
                             </div>
                           </div>
                         </div>
