@@ -248,7 +248,6 @@ export function InventairePage() {
   const [editingOrder, setEditingOrder]       = useState<Order | null>(null);
   const [importModalOrder, setImportModalOrder] = useState<Order | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [dismissBannerId, setDismissBannerId] = useState<string | null>(null);
   const [showAdd, setShowAdd]                 = useState(false);
   const [search, setSearch]                   = useState('');
   const [searchStock, setSearchStock]         = useState('');
@@ -409,77 +408,32 @@ export function InventairePage() {
             ))}
           </div>
 
-          {/* ── Bandeau livraisons ── */}
-          {deliveries.length > 0 && (
-            <div className="mb-5 bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
-                <Truck size={16} className="text-white" />
-                <span className="text-white font-semibold text-sm">Livraisons à venir</span>
-                <div className="ml-auto flex items-center gap-3 text-xs text-blue-100 flex-wrap">
-                  {lateCount > 0     && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lateCount} en retard</span>}
-                  {todayCount > 0    && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />{todayCount} aujourd'hui</span>}
-                  {upcomingCount > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-300 inline-block" />{upcomingCount} à venir</span>}
-                  <div className="flex items-center gap-2 pl-3 border-l border-white/20">
-                    <span className={`w-2 h-2 rounded-full ${cronStatus.dot}`} />
-                    <span className={`hidden sm:inline ${cronStatus.color}`}>{cronStatus.label}</span>
-                    <button onClick={triggerRefresh} disabled={refreshing}
-                      className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-50 text-white">
-                      <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
-                      <span className="hidden sm:inline">{refreshing ? 'Refresh...' : 'Refresh'}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {deliveries.map(({ order, date, diffDays, noTracking }) => {
-                  const status  = (order.delivery_status ?? 'pending') as string;
-                  const urgency = noTracking ? { text: 'En attente du lien de suivi', dot: 'bg-gray-400' } : getUrgency(diffDays, status);
-                  const isDone  = status === 'collected' || status === 'delivered';
-                  const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
-                  const firstItem = order.items?.[0];
-                  const moreCount = (order.items?.length ?? 0) - 1;
-                  return (
-                    <div key={order.id} onClick={() => order.tracking_link && window.open(order.tracking_link, '_blank')}
-                      className={`px-5 py-3 transition-colors cursor-pointer ${isDone ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-50'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${urgency.dot}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{order.supplier_name}</p>
-                          <p className="text-xs text-gray-400 truncate">
-                            {firstItem ? `${firstItem.quantity}x ${firstItem.name}` : '—'}
-                            {moreCount > 0 && ` +${moreCount} autre${moreCount > 1 ? 's' : ''}`}
-                          </p>
-                        </div>
-                        <div className="hidden sm:flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
-                          <CalendarClock size={12} className="text-gray-300" />
-                          {date ? fmt(date) : '—'}
-                        </div>
-                        <span className="text-xs font-medium text-gray-500 flex-shrink-0">{urgency.text}</span>
-                        {status === 'pending' && !noTracking && (
-                          <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border ${order.delivery_type === 'pickup' ? 'border-blue-200 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-500 bg-gray-50'}`}>
-                            {order.delivery_type === 'pickup' ? <><MapPin size={10} /><span className="hidden sm:inline">Relais</span></> : <><Home size={10} /><span className="hidden sm:inline">Domicile</span></>}
-                          </span>
-                        )}
-                        {isDone && (
-                          <button onClick={(e) => { e.stopPropagation(); setDismissBannerId(order.id); }}
-                            className="text-xs text-gray-400 hover:text-red-400 transition-colors">✕</button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+          {/* ── Tabs + cron status ── */}
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm">
+              <button onClick={() => setTab('transit')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'transit' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                🚚 En transit <span className="ml-1.5 text-xs opacity-70">{pending.length}</span>
+              </button>
+              <button onClick={() => setTab('stock')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'stock' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                🏠 Mon stock <span className="ml-1.5 text-xs opacity-70">{stockItems.length}</span>
+              </button>
             </div>
-          )}
-
-          {/* ── Tabs ── */}
-          <div className="flex gap-1 mb-4 bg-white rounded-xl p-1 shadow-sm w-fit">
-            <button onClick={() => setTab('transit')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'transit' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-              🚚 En transit <span className="ml-1.5 text-xs opacity-70">{pending.length}</span>
-            </button>
-            <button onClick={() => setTab('stock')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'stock' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-              🏠 Mon stock <span className="ml-1.5 text-xs opacity-70">{stockItems.length}</span>
-            </button>
+            {/* Cron status + refresh */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl shadow-sm text-xs">
+              {lateCount > 0     && <span className="flex items-center gap-1 text-red-500 font-medium"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lateCount} en retard</span>}
+              {todayCount > 0    && <span className="flex items-center gap-1 text-emerald-600 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />{todayCount} aujourd'hui</span>}
+              {upcomingCount > 0 && <span className="flex items-center gap-1 text-blue-500 font-medium"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />{upcomingCount} à venir</span>}
+              {(lateCount > 0 || todayCount > 0 || upcomingCount > 0) && <span className="text-gray-200">|</span>}
+              <span className={`flex items-center gap-1 ${cronStatus.color.replace('text-', 'text-').replace('-300', '-500')}`}>
+                <span className={`w-2 h-2 rounded-full ${cronStatus.dot}`} />
+                {cronStatus.label}
+              </span>
+              <button onClick={triggerRefresh} disabled={refreshing}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50 font-medium">
+                <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
+                {refreshing ? 'Refresh...' : 'Refresh'}
+              </button>
+            </div>
           </div>
 
           {/* ══════════════ TAB EN TRANSIT ══════════════ */}
@@ -713,11 +667,7 @@ export function InventairePage() {
           onConfirm={() => handleDeleteOrder(confirmDeleteId)}
           onCancel={() => setConfirmDeleteId(null)} />
       )}
-      {dismissBannerId && (
-        <ConfirmModal message="Archiver cette commande ?" confirmLabel="Archiver" confirmColor="blue"
-          onConfirm={() => { updateDeliveryStatus(dismissBannerId, 'collected'); setDismissBannerId(null); }}
-          onCancel={() => setDismissBannerId(null)} />
-      )}
+
       {importModalOrder && (
         <ImportModal order={importModalOrder}
           onImport={handleImportItems}
