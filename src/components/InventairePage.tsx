@@ -164,7 +164,7 @@ function StockRow({ item, onUpdate, onDelete }: { item: any; onUpdate: (id: stri
 // Import modal
 // ─────────────────────────────────────────────
 function ImportModal({ order, onImport, onClose }: { order: Order; onImport: (items: any[]) => Promise<void>; onClose: () => void }) {
-  const [selected, setSelected]     = useState<Record<number, boolean>>(Object.fromEntries(order.items.map((_, i) => [i, true])));
+  const [selected, setSelected]     = useState<Record<number, boolean>>(Object.fromEntries(order.items.map((_, i) => [i, false])));
   const [quantities, setQuantities] = useState<Record<number, number>>(Object.fromEntries(order.items.map((item, i) => [i, item.quantity])));
   const [loading, setLoading]       = useState(false);
   const toggleAll = (v: boolean) => setSelected(Object.fromEntries(order.items.map((_, i) => [i, v])));
