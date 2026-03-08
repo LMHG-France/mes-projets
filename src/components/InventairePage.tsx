@@ -356,10 +356,10 @@ export function InventairePage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
         .inv-page * { box-sizing: border-box; }
-        .inv-page { font-family:'Inter',sans-serif; }
-        .jb { font-family:'JetBrains Mono',monospace; }
+        .inv-page { font-family:'Outfit',sans-serif; font-size:15px; letter-spacing:-0.01em; }
+        .jb { font-family:'DM Mono',monospace; }
         @keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
         @keyframes pring{0%{transform:scale(.9);opacity:.6}100%{transform:scale(2.4);opacity:0}}
         @keyframes fadein{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
@@ -380,7 +380,7 @@ export function InventairePage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-xs font-semibold tracking-widest text-blue-400 uppercase jb mb-1">Inventaire</p>
-              <h1 className="text-3xl font-bold text-gray-900">Mes commandes</h1>
+              <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Mes commandes</h1>
             </div>
             <button
               onClick={() => { setEditingOrder(null); setShowForm(true); }}
@@ -519,7 +519,7 @@ export function InventairePage() {
                       <div className="bg-white rounded-2xl shadow-sm p-5" style={{ borderTop: '3px solid #3b82f6' }}>
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
-                            <h2 className="text-xl font-bold text-gray-900">{selectedOrder.supplier_name}</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{selectedOrder.supplier_name}</h2>
                             <p className="text-sm text-gray-400 mt-0.5">Commandé le {fmtLong(selectedOrder.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
