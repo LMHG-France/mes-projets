@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Auth } from './components/Auth';
-import { OrdersManager } from './components/OrdersManager';
-import { StockManager } from './components/StockManager';
+import { InventairePage } from './components/InventairePage';
 import { ProfitManager } from './components/ProfitManager';
 import { FinancialTracker } from './components/FinancialTracker';
 import { Sidebar } from './components/Sidebar';
 
 function AppContent() {
   const { user, loading } = useAuth();
-  const [activeView, setActiveView] = useState('orders');
+  const [activeView, setActiveView] = useState('inventaire');
 
   if (loading) {
     return (
@@ -39,10 +38,9 @@ function AppContent() {
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Sidebar activeView={activeView} onNavigate={setActiveView} />
       <main className="flex-1">
-        {activeView === 'orders' && <OrdersManager />}
-        {activeView === 'stock' && <StockManager />}
-        {activeView === 'profit' && <ProfitManager />}
-        {activeView === 'financial' && <FinancialTracker />}
+        {activeView === 'inventaire' && <InventairePage />}
+        {activeView === 'profit'     && <ProfitManager />}
+        {activeView === 'financial'  && <FinancialTracker />}
       </main>
     </div>
   );
