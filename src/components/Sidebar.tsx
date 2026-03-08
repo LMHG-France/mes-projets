@@ -1,4 +1,4 @@
-import { ShoppingCart, Package, Menu, X, LogOut, DollarSign } from 'lucide-react';
+import { Package, Menu, X, LogOut, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,14 +12,9 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
   const { signOut } = useAuth();
 
   const menuItems = [
-    { id: 'orders', label: 'Commandes', icon: ShoppingCart },
-    { id: 'stock', label: 'Stock en attente', icon: Package },
-    { id: 'financial', label: 'Suivi Financier', icon: DollarSign },
+    { id: 'inventaire', label: 'Inventaire',      icon: Package },
+    { id: 'financial',  label: 'Suivi Financier', icon: DollarSign },
   ];
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
 
   return (
     <>
@@ -46,10 +41,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  onNavigate(item.id);
-                  setIsOpen(false);
-                }}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                   activeView === item.id
                     ? 'bg-blue-600 text-white'
@@ -65,7 +57,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
 
         <div className="p-4 border-t border-gray-200">
           <button
-            onClick={handleSignOut}
+            onClick={signOut}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-600 hover:bg-red-50 transition-colors"
           >
             <LogOut size={20} />
