@@ -299,9 +299,10 @@ export function InventairePage() {
     return [...withDate, ...withoutDate];
   }, [allDbOrders, today]);
 
-  const lateCount     = deliveries.filter(d => d.diffDays < 0 && d.order.delivery_status !== 'delivered').length;
-  const todayCount    = deliveries.filter(d => d.diffDays === 0 && d.order.delivery_status !== 'delivered').length;
-  const upcomingCount = deliveries.filter(d => d.diffDays > 0 && d.order.delivery_status !== 'delivered').length;
+  const relaisCount   = deliveries.filter(d => d.order.delivery_status === 'available').length;
+  const lateCount     = deliveries.filter(d => d.diffDays < 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'available').length;
+  const todayCount    = deliveries.filter(d => d.diffDays === 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'available').length;
+  const upcomingCount = deliveries.filter(d => d.diffDays > 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'available').length;
 
   const getUrgency = (diffDays: number, status: string) => {
     if (status === 'available') return { text: 'Disponible au relais', dot: 'bg-amber-400' };
@@ -421,9 +422,10 @@ export function InventairePage() {
             {/* Cron status + refresh */}
             <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl shadow-sm text-xs">
               {lateCount > 0     && <span className="flex items-center gap-1 text-red-500 font-medium"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lateCount} en retard</span>}
+              {relaisCount > 0   && <span className="flex items-center gap-1 text-amber-500 font-medium"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />{relaisCount} au relais</span>}
               {todayCount > 0    && <span className="flex items-center gap-1 text-emerald-600 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />{todayCount} aujourd'hui</span>}
               {upcomingCount > 0 && <span className="flex items-center gap-1 text-blue-500 font-medium"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />{upcomingCount} à venir</span>}
-              {(lateCount > 0 || todayCount > 0 || upcomingCount > 0) && <span className="text-gray-200">|</span>}
+              {(lateCount > 0 || relaisCount > 0 || todayCount > 0 || upcomingCount > 0) && <span className="text-gray-200">|</span>}
               <span className={`flex items-center gap-1 ${cronStatus.color.replace('text-', 'text-').replace('-300', '-500')}`}>
                 <span className={`w-2 h-2 rounded-full ${cronStatus.dot}`} />
                 {cronStatus.label}
