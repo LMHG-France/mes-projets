@@ -199,12 +199,18 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
     }
     try {
       setSubmitting(true);
+      const hadTrackingBefore = !!initialData?.tracking_link;
+      const hasTrackingNow    = !!trackingLink;
+      const trackingWasRemoved = hadTrackingBefore && !hasTrackingNow;
+
       await onSubmit({
         supplier_name:           supplierName,
         items,
         total_price:             getTotalPrice(),
         tracking_link:           trackingLink || null,
         expected_delivery_date:  expectedDeliveryDate || null,
+        // Si le lien de suivi est supprimé → repasser en "pending"
+        ...(trackingWasRemoved ? { delivery_status: 'pending', expected_delivery_date: null } : {}),
       });
       onClose();
     } catch (err) {
