@@ -262,12 +262,33 @@ export function InventairePage() {
 
   // Filtrage gauche par recherche
   const filteredPending = useMemo(() => {
-    if (!search.trim()) return pending;
-    const q = search.toLowerCase();
-    return pending.filter(o =>
-      o.supplier_name.toLowerCase().includes(q) ||
-      o.items.some(i => i.name.toLowerCase().includes(q))
-    );
+    const STATUS_PRIORITY: Record<string, number> = {
+      delivered: 0,  // livré → en haut
+      available: 1,  // au relais
+      pending:   2,  // en transit
+      collected: 3,
+    };
+
+    let list = [...pending];
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(o =>
+        o.supplier_name.toLowerCase().includes(q) ||
+        o.items.some(i => i.name.toLowerCase().includes(q))
+      );
+    }
+
+    return list.sort((a, b) => {
+      const pa = STATUS_PRIORITY[a.delivery_status ?? 'pending'] ?? 2;
+      const pb = STATUS_PRIORITY[b.delivery_status ?? 'pending'] ?? 2;
+      if (pa !== pb) return pa - pb;
+      // Même statut → par date de livraison (la plus proche en premier), puis alphabétique
+      const da = a.expected_delivery_date ? new Date(a.expected_delivery_date).getTime() : Infinity;
+      const db = b.expected_delivery_date ? new Date(b.expected_delivery_date).getTime() : Infinity;
+      if (da !== db) return da - db;
+      return a.supplier_name.localeCompare(b.supplier_name);
+    });
   }, [pending, search]);
 
   const selectedOrder = filteredPending.find(o => o.id === selected) ?? filteredPending[0] ?? null;
