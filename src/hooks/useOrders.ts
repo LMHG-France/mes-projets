@@ -36,6 +36,10 @@ export function useOrders() {
   useEffect(() => {
     if (!user) { setOrders([]); setLoading(false); return; }
     fetchOrders();
+
+    // Polling toutes les 3 minutes en fallback du Realtime
+    const pollInterval = setInterval(() => { fetchOrders(); }, 3 * 60 * 1000);
+
     const channel = supabase
       .channel('orders_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
@@ -57,7 +61,8 @@ export function useOrders() {
           }
         }
       ).subscribe();
-    return () => { channel.unsubscribe(); };
+
+    return () => { clearInterval(pollInterval); channel.unsubscribe(); };
   }, [user]);
 
   const fetchOrders = async (includeHidden = false) => {
