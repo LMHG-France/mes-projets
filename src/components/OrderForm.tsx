@@ -27,7 +27,10 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
 
   // ── Extraction automatique de la date depuis le lien ─────────
   const extractDeliveryDate = async (url: string) => {
-    if (!url || !url.startsWith('http')) return;
+    // Accepte une URL ou un numéro de suivi brut (min 6 caractères alphanumériques)
+    const isUrl = url.startsWith('http');
+    const isTrackingNumber = !isUrl && /^[A-Z0-9]{6,35}$/i.test(url.trim());
+    if (!url || (!isUrl && !isTrackingNumber)) return;
 
     setDateExtracting(true);
     setDateExtractStatus('idle');
@@ -377,7 +380,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="https://..."
               />
-              <button type="button" onClick={handleOpenLink} disabled={!isValidUrl(trackingLink)}
+              <button type="button" onClick={handleOpenLink} disabled={!isValidUrl(trackingLink)} style={{display: trackingLink && !trackingLink.startsWith("http") ? "none" : ""}}
                 title="Ouvrir le lien"
                 className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm">
                 <ExternalLink size={16} /> Ouvrir
