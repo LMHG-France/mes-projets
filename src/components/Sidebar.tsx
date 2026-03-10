@@ -12,9 +12,9 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
   const { signOut } = useAuth();
 
   const menuItems = [
-    { id: 'inventaire', label: 'Inventaire',      icon: Package  },
+    { id: 'inventaire', label: 'Inventaire',      icon: Package    },
+    { id: 'historique', label: 'Base produits',   icon: History    },
     { id: 'financial',  label: 'Suivi Financier', icon: DollarSign },
-    { id: 'historique', label: 'Historique',      icon: History  },
   ];
 
   return (
