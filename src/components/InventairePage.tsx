@@ -508,10 +508,12 @@ export function InventairePage() {
                               </div>
                               <div className="flex items-center justify-between mt-0.5">
                                 <p className="text-xs text-gray-400">{qty} unités</p>
-                                {st === 'available' ? (
+                                {st === 'delivered' ? (
+                                  <p className="text-xs font-semibold text-emerald-500">{order.delivery_type === 'pickup' ? 'Récupéré' : 'Livré'}</p>
+                                ) : st === 'available' ? (
                                   <p className="text-xs font-medium text-amber-500">Au relais</p>
                                 ) : order.expected_delivery_date ? (
-                                  <p className={`text-xs font-medium ${dl !== null && dl < 0 && st !== 'delivered' ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
+                                  <p className={`text-xs font-medium ${dl !== null && dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
                                     {dl === 0 ? 'Auj.' : fmtShort(order.expected_delivery_date)}
                                   </p>
                                 ) : <p className="text-xs text-gray-300">—</p>}
