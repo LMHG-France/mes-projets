@@ -1,4 +1,4 @@
-import { Package, Menu, X, LogOut, DollarSign } from 'lucide-react';
+import { Package, Menu, X, LogOut, DollarSign, History } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,8 +12,9 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
   const { signOut } = useAuth();
 
   const menuItems = [
-    { id: 'inventaire', label: 'Inventaire',      icon: Package },
+    { id: 'inventaire', label: 'Inventaire',      icon: Package  },
     { id: 'financial',  label: 'Suivi Financier', icon: DollarSign },
+    { id: 'historique', label: 'Historique',      icon: History  },
   ];
 
   return (
@@ -67,10 +68,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
       </aside>
 
       {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30" onClick={() => setIsOpen(false)} />
       )}
     </>
   );
