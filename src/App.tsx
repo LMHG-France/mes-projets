@@ -4,6 +4,7 @@ import { Auth } from './components/Auth';
 import { InventairePage } from './components/InventairePage';
 import { ProfitManager } from './components/ProfitManager';
 import { FinancialTracker } from './components/FinancialTracker';
+import { HistoriquePage } from './components/HistoriquePage';
 import { Sidebar } from './components/Sidebar';
 
 function AppContent() {
@@ -37,10 +38,11 @@ function AppContent() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Sidebar activeView={activeView} onNavigate={setActiveView} />
-      <main className="flex-1">
+      <main className="flex-1 overflow-auto">
         {activeView === 'inventaire' && <InventairePage />}
-        {activeView === 'profit'     && <ProfitManager />}
         {activeView === 'financial'  && <FinancialTracker />}
+        {activeView === 'profit'     && <ProfitManager />}
+        {activeView === 'historique' && <HistoriquePage />}
       </main>
     </div>
   );
