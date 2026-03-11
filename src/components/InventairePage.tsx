@@ -554,6 +554,12 @@ export function InventairePage() {
                               ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 bg-gray-50"><Home size={11} />Domicile</span>
                               : null}
                             <span className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
+                            {selectedOrder.order_link && (
+                              <a href={selectedOrder.order_link} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+                                <ExternalLink size={11} />Commande
+                              </a>
+                            )}
                             {selectedOrder.tracking_link && (
                               <a href={selectedOrder.tracking_link} target="_blank" rel="noopener noreferrer"
                                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white hover:opacity-80 transition-opacity" style={{ background: cfg.color }}>
