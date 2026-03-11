@@ -13,6 +13,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
   const [supplierName, setSupplierName]               = useState(initialData?.supplier_name || '');
   const [items, setItems]                             = useState<OrderItem[]>(initialData?.items || []);
   const [trackingLink, setTrackingLink]               = useState(initialData?.tracking_link || '');
+  const [orderLink, setOrderLink]                       = useState(initialData?.order_link || '');
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(initialData?.expected_delivery_date || '');
   const [error, setError]                             = useState<string | null>(null);
   const [submitting, setSubmitting]                   = useState(false);
@@ -211,6 +212,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
         items,
         total_price:             getTotalPrice(),
         tracking_link:           trackingLink || null,
+        order_link:              orderLink || null,
         expected_delivery_date:  expectedDeliveryDate || null,
         // Si le lien de suivi est supprimé → repasser en "pending"
         ...(trackingWasRemoved ? { delivery_status: 'pending', expected_delivery_date: null } : {}),
@@ -366,6 +368,27 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
                 </p>
               </div>
             )}
+          </div>
+
+          {/* ── Lien de la commande ───────────────────────────── */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Lien de la commande</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={orderLink}
+                onChange={e => setOrderLink(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://..."
+              />
+              <button type="button"
+                onClick={() => { if (orderLink) window.open(orderLink.startsWith('http') ? orderLink : `https://${orderLink}`, '_blank'); }}
+                disabled={!orderLink}
+                title="Ouvrir le lien"
+                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm">
+                <ExternalLink size={16} /> Ouvrir
+              </button>
+            </div>
           </div>
 
           {/* ── Lien commande + extraction auto de date ─────────── */}
