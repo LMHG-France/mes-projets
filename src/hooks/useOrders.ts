@@ -19,6 +19,7 @@ export interface Order {
   items: OrderItem[];
   total_price: number;
   tracking_link: string | null;
+  order_link: string | null;
   expected_delivery_date: string | null;
   delivery_status: DeliveryStatus;
   delivery_type: string | null;
@@ -90,6 +91,7 @@ export function useOrders() {
         items: orderData.items,
         total_price: orderData.total_price,
         tracking_link: orderData.tracking_link,
+        order_link: orderData.order_link ?? null,
         delivery_status: orderData.delivery_status ?? 'pending',
       };
       if (orderData.expected_delivery_date) insertData.expected_delivery_date = orderData.expected_delivery_date;
