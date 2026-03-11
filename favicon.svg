@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1d4ed8"/>
+      <stop offset="100%" style="stop-color:#2563eb"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#bfdbfe;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fond arrondi -->
+  <rect width="200" height="200" rx="44" fill="url(#bg)"/>
+
+  <!-- Boîte ouverte (bas) -->
+  <rect x="44" y="108" width="112" height="56" rx="10" fill="white" opacity="0.15"/>
+  <rect x="44" y="108" width="112" height="56" rx="10" fill="none" stroke="white" stroke-width="5" stroke-opacity="0.9"/>
+
+  <!-- Rabat gauche -->
+  <path d="M44 108 L78 92 L78 108Z" fill="white" opacity="0.25"/>
+  <!-- Rabat droit -->
+  <path d="M156 108 L122 92 L122 108Z" fill="white" opacity="0.25"/>
+  <!-- Rabat du dessus -->
+  <path d="M78 92 L100 84 L122 92 L100 100Z" fill="white" opacity="0.35"/>
+
+  <!-- Flèche montante -->
+  <line x1="100" y1="136" x2="100" y2="58" stroke="url(#arrow)" stroke-width="7" stroke-linecap="round"/>
+  <polyline points="82,76 100,55 118,76" fill="none" stroke="url(#arrow)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
