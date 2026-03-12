@@ -18,8 +18,10 @@ export function HistoriquePage() {
 
   // Aplatir tous les articles de toutes les commandes (y compris collected/hidden)
   const allLines = useMemo((): HistoryLine[] => {
+    const isShipping = (name: string) => /frais de livraison|livraison|shipping|port/i.test(name);
+
     return orders.flatMap(order =>
-      order.items.map(item => ({
+      order.items.filter(item => !isShipping(item.name)).map(item => ({
         productName:  item.name,
         supplierName: order.supplier_name,
         quantity:     item.quantity,
