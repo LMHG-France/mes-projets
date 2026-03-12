@@ -53,16 +53,18 @@ function useCronStatus(onRefreshDone?: () => void) {
       const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
       const { data: orders } = await supabase.from('orders').select('id, tracking_link')
         .not('tracking_link', 'is', null).neq('tracking_link', '').neq('delivery_status', 'collected');
-      // Appels séquentiels avec délai pour éviter le rate limit AfterShip
       for (const o of (orders || [])) {
         await fetch(`${url}/functions/v1/extract_delivery_date`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
           body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
         });
-        await new Promise(r => setTimeout(r, 800)); // 800ms entre chaque appel
+        await new Promise(r => setTimeout(r, 800));
       }
       await fetchLastRefresh();
+      // Attendre 500ms pour que Supabase Realtime ait le temps de propager,
+      // puis forcer un rechargement explicite des commandes
+      await new Promise(r => setTimeout(r, 500));
       onRefreshDone?.();
     } finally { setRefreshing(false); }
   };
@@ -242,7 +244,9 @@ export function InventairePage() {
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
-  const { cronStatus, refreshing, triggerRefresh } = useCronStatus(fetchOrders);
+  const { cronStatus, refreshing, triggerRefresh } = useCronStatus(
+    useCallback(() => { fetchOrders(); }, [fetchOrders])
+  );
 
   // UI state
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
