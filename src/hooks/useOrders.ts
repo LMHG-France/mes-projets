@@ -34,6 +34,22 @@ export function useOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchOrders = useCallback(async (includeHidden = false) => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+      if (!includeHidden) query = query.eq('hidden_in_orders', false);
+      const { data, error: err } = await query;
+      if (err) throw err;
+      setOrders(data || []);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally { setLoading(false); }
+  }, [user]);
+
   useEffect(() => {
     if (!user) { setOrders([]); setLoading(false); return; }
     fetchOrders();
@@ -64,22 +80,6 @@ export function useOrders() {
       ).subscribe();
 
     return () => { clearInterval(pollInterval); channel.unsubscribe(); };
-  }, [user]);
-
-  const fetchOrders = useCallback(async (includeHidden = false) => {
-    if (!user) return;
-    try {
-      setLoading(true);
-      let query = supabase
-        .from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-      if (!includeHidden) query = query.eq('hidden_in_orders', false);
-      const { data, error: err } = await query;
-      if (err) throw err;
-      setOrders(data || []);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally { setLoading(false); }
   }, [user]);
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => {
