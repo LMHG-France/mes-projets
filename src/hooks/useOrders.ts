@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -66,7 +66,7 @@ export function useOrders() {
     return () => { clearInterval(pollInterval); channel.unsubscribe(); };
   }, [user]);
 
-  const fetchOrders = async (includeHidden = false) => {
+  const fetchOrders = useCallback(async (includeHidden = false) => {
     if (!user) return;
     try {
       setLoading(true);
@@ -80,7 +80,7 @@ export function useOrders() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally { setLoading(false); }
-  };
+  }, [user]);
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => {
     if (!user) throw new Error('User not authenticated');
