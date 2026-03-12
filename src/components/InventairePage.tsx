@@ -23,7 +23,7 @@ const STATUS = {
 // ─────────────────────────────────────────────
 // Hook cron status
 // ─────────────────────────────────────────────
-function useCronStatus() {
+function useCronStatus(onRefreshDone?: () => void) {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing]   = useState(false);
   const [, setTick]                   = useState(0);
@@ -61,6 +61,7 @@ function useCronStatus() {
         })
       ));
       await fetchLastRefresh();
+      onRefreshDone?.();
     } finally { setRefreshing(false); }
   };
 
@@ -237,9 +238,9 @@ function ImportModal({ order, onImport, onClose }: { order: Order; onImport: (it
 // ─────────────────────────────────────────────
 export function InventairePage() {
   const { user }  = useAuth();
-  const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus } = useOrders();
+  const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
-  const { cronStatus, refreshing, triggerRefresh } = useCronStatus();
+  const { cronStatus, refreshing, triggerRefresh } = useCronStatus(fetchOrders);
 
   // UI state
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
