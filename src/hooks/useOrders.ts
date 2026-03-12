@@ -122,5 +122,5 @@ export function useOrders() {
     await updateOrder(orderId, { delivery_status: status });
   };
 
-  return { orders, loading, error, addOrder, deleteOrder, updateOrder, updateDeliveryStatus };
+  return { orders, loading, error, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders };
 }
