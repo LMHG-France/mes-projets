@@ -222,6 +222,7 @@ export function InventairePage() {
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
   const { cronStatus, lastRefresh: cronLastRefresh } = useCronStatus();
   const [refreshing, setRefreshing] = useState(false);
+  const [, setRefreshKey] = useState(0);
 
   const triggerRefresh = async () => {
     setRefreshing(true);
@@ -241,8 +242,9 @@ export function InventairePage() {
         });
         await new Promise(r => setTimeout(r, 800));
       }
-      // Rechargement direct et explicite
+      // Recharger directement depuis Supabase — bypass complet du hook
       await fetchOrders();
+      setRefreshKey(k => k + 1);
     } finally {
       setRefreshing(false);
     }
