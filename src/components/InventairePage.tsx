@@ -23,9 +23,8 @@ const STATUS = {
 // ─────────────────────────────────────────────
 // Hook cron status
 // ─────────────────────────────────────────────
-function useCronStatus(onRefreshDone?: () => void) {
+function useCronStatus() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  const [refreshing, setRefreshing]   = useState(false);
   const [, setTick]                   = useState(0);
 
   const fetchLastRefresh = useCallback(async () => {
@@ -46,29 +45,6 @@ function useCronStatus(onRefreshDone?: () => void) {
     return () => { clearInterval(tick); ch.unsubscribe(); };
   }, [fetchLastRefresh]);
 
-  const triggerRefresh = async () => {
-    setRefreshing(true);
-    try {
-      const url = import.meta.env.VITE_SUPABASE_URL;
-      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const { data: orders } = await supabase.from('orders').select('id, tracking_link')
-        .not('tracking_link', 'is', null).neq('tracking_link', '').neq('delivery_status', 'collected');
-      for (const o of (orders || [])) {
-        await fetch(`${url}/functions/v1/extract_delivery_date`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
-        });
-        await new Promise(r => setTimeout(r, 800));
-      }
-      await fetchLastRefresh();
-      // Attendre 500ms pour que Supabase Realtime ait le temps de propager,
-      // puis forcer un rechargement explicite des commandes
-      await new Promise(r => setTimeout(r, 500));
-      onRefreshDone?.();
-    } finally { setRefreshing(false); }
-  };
-
   const getStatus = () => {
     if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
     const min = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
@@ -77,7 +53,7 @@ function useCronStatus(onRefreshDone?: () => void) {
     return               { label: `Màj il y a ${Math.round(min/60)}h`,  color: 'text-red-300',    dot: 'bg-red-400' };
   };
 
-  return { cronStatus: getStatus(), refreshing, triggerRefresh };
+  return { cronStatus: getStatus(), lastRefresh };
 }
 
 // ─────────────────────────────────────────────
@@ -244,11 +220,33 @@ export function InventairePage() {
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
-  const fetchOrdersRef = useRef(fetchOrders);
-  useEffect(() => { fetchOrdersRef.current = fetchOrders; }, [fetchOrders]);
-  const { cronStatus, refreshing, triggerRefresh } = useCronStatus(
-    () => { fetchOrdersRef.current(); }
-  );
+  const { cronStatus, lastRefresh: cronLastRefresh } = useCronStatus();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const triggerRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const { data: ordersToRefresh } = await supabase
+        .from('orders').select('id, tracking_link')
+        .not('tracking_link', 'is', null)
+        .neq('tracking_link', '')
+        .neq('delivery_status', 'collected');
+      for (const o of (ordersToRefresh || [])) {
+        await fetch(`${url}/functions/v1/extract_delivery_date`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+          body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
+        });
+        await new Promise(r => setTimeout(r, 800));
+      }
+      // Rechargement direct et explicite
+      await fetchOrders();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // UI state
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
