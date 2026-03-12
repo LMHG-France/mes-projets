@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import {
   Package, MapPin, Home, Clock, ExternalLink, CheckCircle,
   ChevronRight, Box, Plus, Trash2, Edit2, Check, X,
@@ -244,8 +244,10 @@ export function InventairePage() {
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
+  const fetchOrdersRef = useRef(fetchOrders);
+  useEffect(() => { fetchOrdersRef.current = fetchOrders; }, [fetchOrders]);
   const { cronStatus, refreshing, triggerRefresh } = useCronStatus(
-    useCallback(() => { fetchOrders(); }, [fetchOrders])
+    () => { fetchOrdersRef.current(); }
   );
 
   // UI state
