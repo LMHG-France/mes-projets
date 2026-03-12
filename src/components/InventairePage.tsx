@@ -53,13 +53,15 @@ function useCronStatus(onRefreshDone?: () => void) {
       const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
       const { data: orders } = await supabase.from('orders').select('id, tracking_link')
         .not('tracking_link', 'is', null).neq('tracking_link', '').neq('delivery_status', 'collected');
-      await Promise.all((orders || []).map(o =>
-        fetch(`${url}/functions/v1/extract_delivery_date`, {
+      // Appels séquentiels avec délai pour éviter le rate limit AfterShip
+      for (const o of (orders || [])) {
+        await fetch(`${url}/functions/v1/extract_delivery_date`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
           body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
-        })
-      ));
+        });
+        await new Promise(r => setTimeout(r, 800)); // 800ms entre chaque appel
+      }
       await fetchLastRefresh();
       onRefreshDone?.();
     } finally { setRefreshing(false); }
