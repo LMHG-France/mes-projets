@@ -10,9 +10,6 @@ import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
 import { useStock } from '../hooks/useStock';
 import { OrderForm } from './OrderForm';
 
-// ─────────────────────────────────────────────
-// Statuts livraison
-// ─────────────────────────────────────────────
 const STATUS = {
   pending:   { label: 'En transit',  color: '#3b82f6', bg: '#eff6ff', pulse: true  },
   available: { label: 'Au relais',   color: '#f59e0b', bg: '#fffbeb', pulse: true  },
@@ -20,9 +17,6 @@ const STATUS = {
   collected: { label: 'Récupéré',    color: '#9ca3af', bg: '#f9fafb', pulse: false },
 };
 
-// ─────────────────────────────────────────────
-// Hook cron status
-// ─────────────────────────────────────────────
 function useCronStatus() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [, setTick]                   = useState(0);
@@ -56,9 +50,6 @@ function useCronStatus() {
   return { cronStatus: getStatus(), lastRefresh };
 }
 
-// ─────────────────────────────────────────────
-// ConfirmModal générique
-// ─────────────────────────────────────────────
 function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirmer', confirmColor = 'red', extraButton = null }: any) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
@@ -79,9 +70,6 @@ function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirmer'
   );
 }
 
-// ─────────────────────────────────────────────
-// AddItemForm (stock manuel)
-// ─────────────────────────────────────────────
 function AddItemForm({ onAdd, onCancel }: { onAdd: (name: string, qty: number, price: number) => void; onCancel: () => void }) {
   const [name, setName]   = useState('');
   const [qty, setQty]     = useState('1');
@@ -108,9 +96,6 @@ function AddItemForm({ onAdd, onCancel }: { onAdd: (name: string, qty: number, p
   );
 }
 
-// ─────────────────────────────────────────────
-// StockRow
-// ─────────────────────────────────────────────
 function StockRow({ item, onUpdate, onDelete }: { item: any; onUpdate: (id: string, data: any) => void; onDelete: (id: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [qty, setQty]         = useState(String(item.quantity));
@@ -141,9 +126,6 @@ function StockRow({ item, onUpdate, onDelete }: { item: any; onUpdate: (id: stri
   );
 }
 
-// ─────────────────────────────────────────────
-// Import modal
-// ─────────────────────────────────────────────
 function ImportModal({ order, onImport, onClose }: { order: Order; onImport: (items: any[]) => Promise<void>; onClose: () => void }) {
   const [selected, setSelected]     = useState<Record<number, boolean>>(Object.fromEntries(order.items.map((_, i) => [i, false])));
   const [quantities, setQuantities] = useState<Record<number, number>>(Object.fromEntries(order.items.map((item, i) => [i, item.quantity])));
@@ -213,9 +195,6 @@ function ImportModal({ order, onImport, onClose }: { order: Order; onImport: (it
   );
 }
 
-// ─────────────────────────────────────────────
-// PAGE PRINCIPALE
-// ─────────────────────────────────────────────
 export function InventairePage() {
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
@@ -233,16 +212,20 @@ export function InventairePage() {
         .from('orders').select('id, tracking_link')
         .not('tracking_link', 'is', null)
         .neq('tracking_link', '')
-        .neq('delivery_status', 'collected');
+        .neq('delivery_status', 'collected')
+        .neq('delivery_status', 'delivered');
       for (const o of (ordersToRefresh || [])) {
-        await fetch(`${url}/functions/v1/extract_delivery_date`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
-        });
+        try {
+          await fetch(`${url}/functions/v1/extract_delivery_date`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+            body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
+          });
+        } catch (e) {
+          console.error('Erreur refresh order', o.id, e);
+        }
         await new Promise(r => setTimeout(r, 800));
       }
-      // Recharger directement depuis Supabase — bypass complet du hook
       await fetchOrders();
       setRefreshKey(k => k + 1);
     } finally {
@@ -250,7 +233,6 @@ export function InventairePage() {
     }
   };
 
-  // UI state
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
   const [selected, setSelected]               = useState<string | null>(null);
   const [showForm, setShowForm]               = useState(false);
@@ -262,19 +244,17 @@ export function InventairePage() {
   const [searchStock, setSearchStock]         = useState('');
   const [sortBy, setSortBy]                   = useState<'name'|'price_asc'|'price_desc'|'qty_asc'|'qty_desc'|'value_desc'|'value_asc'>('name');
 
-  // Commandes actives visibles dans "En transit"
   const pending = useMemo(() =>
     allDbOrders
       .filter(o => o.delivery_status !== 'collected' && !o.hidden_in_stock)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
     [allDbOrders]);
 
-  // Filtrage gauche par recherche
   const filteredPending = useMemo(() => {
     const STATUS_PRIORITY: Record<string, number> = {
-      delivered: 0,  // livré → en haut
-      available: 1,  // au relais
-      pending:   2,  // en transit
+      delivered: 0,
+      available: 1,
+      pending:   2,
       collected: 3,
     };
 
@@ -292,7 +272,6 @@ export function InventairePage() {
       const pa = STATUS_PRIORITY[a.delivery_status ?? 'pending'] ?? 2;
       const pb = STATUS_PRIORITY[b.delivery_status ?? 'pending'] ?? 2;
       if (pa !== pb) return pa - pb;
-      // Même statut → par date de livraison (la plus proche en premier), puis alphabétique
       const da = a.expected_delivery_date ? new Date(a.expected_delivery_date).getTime() : Infinity;
       const db = b.expected_delivery_date ? new Date(b.expected_delivery_date).getTime() : Infinity;
       if (da !== db) return da - db;
@@ -302,18 +281,15 @@ export function InventairePage() {
 
   const selectedOrder = filteredPending.find(o => o.id === selected) ?? filteredPending[0] ?? null;
 
-  // Auto-select first when list changes
   useEffect(() => {
     if (filteredPending.length > 0 && !filteredPending.find(o => o.id === selected)) {
       setSelected(filteredPending[0].id);
     }
   }, [filteredPending]);
 
-  // Stats
   const transitValue = useMemo(() => pending.reduce((s, o) => s + o.total_price, 0), [pending]);
   const transitUnits = useMemo(() => pending.reduce((s, o) => s + o.items.reduce((si, i) => si + i.quantity, 0), 0), [pending]);
 
-  // Bandeau livraisons (sur tous les allDbOrders non collected)
   const today = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d; }, []);
   const deliveries = useMemo(() => {
     const active = allDbOrders.filter(o => o.delivery_status !== 'collected');
@@ -343,7 +319,6 @@ export function InventairePage() {
     return               { text: `Dans ${diffDays}j`,        dot: 'bg-gray-400' };
   };
 
-  // Stock filtré + trié
   const filteredStock = useMemo(() => {
     let items = [...stockItems];
     if (searchStock.trim()) { const q = searchStock.toLowerCase(); items = items.filter(i => i.name.toLowerCase().includes(q)); }
@@ -359,12 +334,10 @@ export function InventairePage() {
     return items;
   }, [stockItems, searchStock, sortBy]);
 
-  // Helpers
   const fmtShort = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
   const fmtLong  = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const daysLeft = (d: string) => { const t = new Date(); t.setHours(0,0,0,0); const x = new Date(d); x.setHours(0,0,0,0); return Math.round((x.getTime()-t.getTime())/86400000); };
 
-  // Handlers
   const handleImportItems = async (items: any[]) => {
     const orderId = importModalOrder?.id;
     for (const item of items) await addItem({ name: item.name, quantity: item.quantity, unit_price: item.unit_price, source_order_id: orderId });
@@ -406,7 +379,6 @@ export function InventairePage() {
       <div className="inv-page min-h-screen" style={{ background: '#f4f6fb' }}>
         <div className="max-w-6xl mx-auto px-4 py-8">
 
-          {/* ── Header ── */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-xs font-semibold tracking-widest text-blue-400 uppercase jb mb-1">Inventaire</p>
@@ -419,7 +391,6 @@ export function InventairePage() {
             </button>
           </div>
 
-          {/* ── Stat cards ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
             {[
               { label:'En transit',     val:`${transitValue.toFixed(2)} €`, sub:`${pending.length} commandes`,    icon:'🚚', iconBg:'#eff6ff', t:'transit' as const },
@@ -439,7 +410,6 @@ export function InventairePage() {
             ))}
           </div>
 
-          {/* ── Tabs + cron status ── */}
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
             <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm">
               <button onClick={() => setTab('transit')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'transit' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -449,7 +419,6 @@ export function InventairePage() {
                 🏠 Mon stock <span className="ml-1.5 text-xs opacity-70">{stockItems.length}</span>
               </button>
             </div>
-            {/* Cron status + refresh */}
             <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl shadow-sm text-xs">
               {lateCount > 0     && <span className="flex items-center gap-1 text-red-500 font-medium"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lateCount} en retard</span>}
               {relaisCount > 0   && <span className="flex items-center gap-1 text-amber-500 font-medium"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />{relaisCount} au relais</span>}
@@ -468,7 +437,6 @@ export function InventairePage() {
             </div>
           </div>
 
-          {/* ══════════════ TAB EN TRANSIT ══════════════ */}
           {tab === 'transit' && (
             pending.length === 0 ? (
               <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
@@ -481,10 +449,7 @@ export function InventairePage() {
               </div>
             ) : (
               <div className="flex gap-4 items-start">
-
-                {/* ── Colonne gauche ── */}
                 <div className="w-96 flex-shrink-0 bg-white rounded-2xl shadow-sm flex flex-col overflow-hidden">
-                  {/* Search dans la liste */}
                   <div className="p-2 border-b border-gray-50">
                     <div className="relative">
                       <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -493,7 +458,6 @@ export function InventairePage() {
                       {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
                     </div>
                   </div>
-                  {/* List */}
                   <div className="p-2 flex flex-col gap-1 overflow-y-auto max-h-[600px]">
                     {filteredPending.length === 0 ? (
                       <p className="text-sm text-gray-400 text-center py-6">Aucun résultat</p>
@@ -541,7 +505,6 @@ export function InventairePage() {
                   </div>
                 </div>
 
-                {/* ── Colonne droite : détail ── */}
                 {selectedOrder && (() => {
                   const st  = (selectedOrder.delivery_status ?? 'pending') as keyof typeof STATUS;
                   const cfg = STATUS[st];
@@ -549,7 +512,6 @@ export function InventairePage() {
                   const dl  = selectedOrder.expected_delivery_date ? daysLeft(selectedOrder.expected_delivery_date) : null;
                   return (
                     <div key={selectedOrder.id} className="flex-1 detail-anim space-y-3 min-w-0">
-                      {/* Header */}
                       <div className="bg-white rounded-2xl shadow-sm p-5" style={{ borderTop: '3px solid #3b82f6' }}>
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
@@ -606,7 +568,6 @@ export function InventairePage() {
                           </div>
                         </div>
                       </div>
-                      {/* Articles */}
                       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                         <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
                           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Articles</p>
@@ -637,10 +598,8 @@ export function InventairePage() {
             )
           )}
 
-          {/* ══════════════ TAB MON STOCK ══════════════ */}
           {tab === 'stock' && (
             <div className="space-y-3">
-              {/* Barre recherche + tri + ajouter */}
               <div className="flex gap-2 flex-wrap">
                 <div className="relative flex-1 min-w-48">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -703,7 +662,6 @@ export function InventairePage() {
         </div>
       </div>
 
-      {/* ── Modales ── */}
       {confirmDeleteId && (
         <ConfirmModal message="Supprimer cette commande ?" confirmLabel="Supprimer" confirmColor="red"
           onConfirm={() => handleDeleteOrder(confirmDeleteId)}
