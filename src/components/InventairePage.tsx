@@ -216,11 +216,12 @@ export function InventairePage() {
         .neq('delivery_status', 'delivered');
       for (const o of (ordersToRefresh || [])) {
         try {
-          await fetch(`${url}/functions/v1/extract_delivery_date`, {
+          const res = await fetch(`${url}/functions/v1/extract_delivery_date`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
             body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
           });
+          if (!res.ok) console.error(`Erreur refresh order ${o.id}: HTTP ${res.status}`);
         } catch (e) {
           console.error('Erreur refresh order', o.id, e);
         }
