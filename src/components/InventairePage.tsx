@@ -17,6 +17,8 @@ const STATUS = {
   collected: { label: 'Récupéré',    color: '#9ca3af', bg: '#f9fafb', pulse: false },
 };
 
+const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
 function useCronStatus() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [, setTick]                   = useState(0);
@@ -30,13 +32,23 @@ function useCronStatus() {
     if (data?.delivery_date_updated_at) setLastRefresh(new Date(data.delivery_date_updated_at));
   }, []);
 
+  // Ref pour déclencher triggerRefresh depuis l'auto-interval sans stale closure
+  const triggerRefreshRef = useRef<(() => Promise<void>) | null>(null);
+
   useEffect(() => {
     fetchLastRefresh();
     const tick = setInterval(() => { setTick(t => t + 1); fetchLastRefresh(); }, 60000);
+
+    // Auto-refresh toutes les 30 minutes
+    const autoRefresh = setInterval(() => {
+      console.log('[Auto-refresh] Déclenchement automatique toutes les 30 min');
+      triggerRefreshRef.current?.();
+    }, AUTO_REFRESH_INTERVAL);
+
     const ch = supabase.channel('cron_watch')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => fetchLastRefresh())
       .subscribe();
-    return () => { clearInterval(tick); ch.unsubscribe(); };
+    return () => { clearInterval(tick); clearInterval(autoRefresh); ch.unsubscribe(); };
   }, [fetchLastRefresh]);
 
   const getStatus = () => {
@@ -47,7 +59,7 @@ function useCronStatus() {
     return               { label: `Màj il y a ${Math.round(min/60)}h`,  color: 'text-red-300',    dot: 'bg-red-400' };
   };
 
-  return { cronStatus: getStatus(), lastRefresh };
+  return { cronStatus: getStatus(), lastRefresh, triggerRefreshRef };
 }
 
 function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirmer', confirmColor = 'red', extraButton = null }: any) {
@@ -199,11 +211,13 @@ export function InventairePage() {
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
-  const { cronStatus, lastRefresh: cronLastRefresh } = useCronStatus();
+  const { cronStatus, lastRefresh: cronLastRefresh, triggerRefreshRef } = useCronStatus();
   const [refreshing, setRefreshing] = useState(false);
   const [, setRefreshKey] = useState(0);
+  const refreshingRef = useRef(false);
 
-  const triggerRefresh = async () => {
+  const triggerRefresh = useCallback(async () => {
+    if (refreshingRef.current) return;
     setRefreshing(true);
     try {
       const url = import.meta.env.VITE_SUPABASE_URL;
@@ -230,9 +244,14 @@ export function InventairePage() {
       await fetchOrders();
       setRefreshKey(k => k + 1);
     } finally {
+      refreshingRef.current = false;
       setRefreshing(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchOrders]);
+
+  // Connecter triggerRefresh au ref pour l'auto-refresh
+  useEffect(() => { triggerRefreshRef.current = triggerRefresh; }, [triggerRefresh, triggerRefreshRef]);
 
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
   const [selected, setSelected]               = useState<string | null>(null);
