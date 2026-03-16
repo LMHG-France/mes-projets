@@ -1,9 +1,11 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck, RefreshCw } from 'lucide-react';
 import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
 import { OrderForm } from './OrderForm';
 import { OrdersList } from './OrdersList';
 import { supabase } from '../lib/supabase';
+
+const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 function useCronStatus(fetchOrders: () => Promise<void>) {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -21,29 +23,16 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
     if (data?.delivery_date_updated_at) setLastRefresh(new Date(data.delivery_date_updated_at));
   }, []);
 
-  useEffect(() => {
-    fetchLastRefresh();
+  // useRef pour éviter les stale closures dans setInterval
+  const refreshingRef = useRef(false);
+  const fetchOrdersRef = useRef(fetchOrders);
+  const fetchLastRefreshRef = useRef(fetchLastRefresh);
+  useEffect(() => { fetchOrdersRef.current = fetchOrders; }, [fetchOrders]);
+  useEffect(() => { fetchLastRefreshRef.current = fetchLastRefresh; }, [fetchLastRefresh]);
 
-    // Re-check timestamp every minute so label stays accurate
-    const tickInterval = setInterval(() => {
-      setTick(t => t + 1);
-      fetchLastRefresh();
-    }, 60000);
-
-    // Realtime: when cron updates delivery_date_updated_at, re-fetch immediately
-    const ch = supabase.channel('cron_status_watch')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
-        fetchLastRefresh();
-      })
-      .subscribe();
-
-    return () => {
-      clearInterval(tickInterval);
-      ch.unsubscribe();
-    };
-  }, [fetchLastRefresh]);
-
-  const triggerRefresh = async () => {
+  const triggerRefresh = useCallback(async () => {
+    if (refreshingRef.current) return; // éviter les appels concurrents
+    refreshingRef.current = true;
     setRefreshing(true);
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -69,11 +58,41 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
         await new Promise(r => setTimeout(r, 800));
       }
       // Forcer le rechargement des commandes ET du timestamp
-      await Promise.all([fetchOrders(), fetchLastRefresh()]);
+      await Promise.all([fetchOrdersRef.current(), fetchLastRefreshRef.current()]);
     } finally {
+      refreshingRef.current = false;
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLastRefresh();
+
+    // Re-check timestamp every minute so label stays accurate
+    const tickInterval = setInterval(() => {
+      setTick(t => t + 1);
+      fetchLastRefreshRef.current();
+    }, 60000);
+
+    // Auto-refresh toutes les 30 minutes
+    const autoRefreshInterval = setInterval(() => {
+      console.log('[Auto-refresh] Déclenchement automatique toutes les 30 min');
+      triggerRefresh();
+    }, AUTO_REFRESH_INTERVAL);
+
+    // Realtime: when cron updates delivery_date_updated_at, re-fetch immediately
+    const ch = supabase.channel('cron_status_watch')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
+        fetchLastRefreshRef.current();
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(tickInterval);
+      clearInterval(autoRefreshInterval);
+      ch.unsubscribe();
+    };
+  }, [fetchLastRefresh, triggerRefresh]);
 
   const getStatus = () => {
     if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
