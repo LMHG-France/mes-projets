@@ -5,7 +5,7 @@ import { OrderForm } from './OrderForm';
 import { OrdersList } from './OrdersList';
 import { supabase } from '../lib/supabase';
 
-function useCronStatus() {
+function useCronStatus(fetchOrders: () => Promise<void>) {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing]   = useState(false);
   const [, setTick] = useState(0); // force re-render every minute to update label
@@ -48,20 +48,28 @@ function useCronStatus() {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const { data: orders } = await supabase
+      const { data: ordersToRefresh } = await supabase
         .from('orders')
         .select('id, tracking_link')
         .not('tracking_link', 'is', null)
         .neq('tracking_link', '')
         .neq('delivery_status', 'collected');
-      await Promise.all((orders || []).map(o =>
-        fetch(`${supabaseUrl}/functions/v1/extract_delivery_date`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anonKey}` },
-          body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
-        })
-      ));
-      await fetchLastRefresh();
+      // Appels séquentiels avec gestion d'erreur individuelle
+      for (const o of (ordersToRefresh || [])) {
+        try {
+          const res = await fetch(`${supabaseUrl}/functions/v1/extract_delivery_date`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anonKey}` },
+            body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
+          });
+          if (!res.ok) console.error(`Erreur refresh order ${o.id}: HTTP ${res.status}`);
+        } catch (e) {
+          console.error(`Erreur refresh order ${o.id}:`, e);
+        }
+        await new Promise(r => setTimeout(r, 800));
+      }
+      // Forcer le rechargement des commandes ET du timestamp
+      await Promise.all([fetchOrders(), fetchLastRefresh()]);
     } finally {
       setRefreshing(false);
     }
@@ -270,8 +278,8 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
 }
 
 export function OrdersManager() {
-  const { orders, loading, addOrder, deleteOrder, updateOrder, updateDeliveryStatus } = useOrders();
-  const { status: cronStatus, refreshing, triggerRefresh } = useCronStatus();
+  const { orders, loading, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
+  const { status: cronStatus, refreshing, triggerRefresh } = useCronStatus(fetchOrders);
   const [showForm, setShowForm]             = useState(false);
   const [editingOrder, setEditingOrder]     = useState<Order | null>(null);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
