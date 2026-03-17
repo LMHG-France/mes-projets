@@ -5,30 +5,18 @@ import { OrderForm } from './OrderForm';
 import { OrdersList } from './OrdersList';
 import { supabase } from '../lib/supabase';
 
-const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
+const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 function useCronStatus(fetchOrders: () => Promise<void>) {
+  // lastRefresh est stocké localement — indépendant de la BDD
+  // Ainsi le timer se met à jour dès que triggerRefresh tourne, même si AfterShip échoue
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing]   = useState(false);
-  const [, setTick] = useState(0); // force re-render every minute to update label
+  const [, setTick] = useState(0); // force re-render every minute
 
-  const fetchLastRefresh = useCallback(async () => {
-    const { data } = await supabase
-      .from('orders')
-      .select('delivery_date_updated_at')
-      .not('delivery_date_updated_at', 'is', null)
-      .order('delivery_date_updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (data?.delivery_date_updated_at) setLastRefresh(new Date(data.delivery_date_updated_at));
-  }, []);
-
-  // useRef pour éviter les stale closures dans setInterval
-  const refreshingRef = useRef(false);
-  const fetchOrdersRef = useRef(fetchOrders);
-  const fetchLastRefreshRef = useRef(fetchLastRefresh);
+  const refreshingRef   = useRef(false);
+  const fetchOrdersRef  = useRef(fetchOrders);
   useEffect(() => { fetchOrdersRef.current = fetchOrders; }, [fetchOrders]);
-  useEffect(() => { fetchLastRefreshRef.current = fetchLastRefresh; }, [fetchLastRefresh]);
 
   const triggerRefresh = useCallback(async () => {
     if (refreshingRef.current) return; // éviter les appels concurrents
@@ -43,7 +31,6 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
         .not('tracking_link', 'is', null)
         .neq('tracking_link', '')
         .neq('delivery_status', 'collected');
-      // Appels séquentiels avec gestion d'erreur individuelle
       for (const o of (ordersToRefresh || [])) {
         try {
           const res = await fetch(`${supabaseUrl}/functions/v1/extract_delivery_date`, {
@@ -57,8 +44,10 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
         }
         await new Promise(r => setTimeout(r, 800));
       }
-      // Forcer le rechargement des commandes ET du timestamp
-      await Promise.all([fetchOrdersRef.current(), fetchLastRefreshRef.current()]);
+      // Mettre à jour le timer LOCAL immédiatement — indépendant de la BDD
+      setLastRefresh(new Date());
+      // Recharger les commandes pour refléter les changements
+      await fetchOrdersRef.current();
     } finally {
       refreshingRef.current = false;
       setRefreshing(false);
@@ -66,38 +55,27 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
   }, []);
 
   useEffect(() => {
-    fetchLastRefresh();
+    const triggerRef = triggerRefresh; // capture stable via useCallback
 
-    // Re-check timestamp every minute so label stays accurate
-    const tickInterval = setInterval(() => {
-      setTick(t => t + 1);
-      fetchLastRefreshRef.current();
-    }, 60000);
+    // Re-render every minute so label ticks ("il y a 1 min", "il y a 2 min"...)
+    const tickInterval = setInterval(() => setTick(t => t + 1), 60000);
 
-    // Auto-refresh toutes les 30 minutes
+    // Auto-refresh toutes les X minutes
     const autoRefreshInterval = setInterval(() => {
-      console.log('[Auto-refresh] Déclenchement automatique toutes les 30 min');
-      triggerRefresh();
+      console.log(`[Auto-refresh] Déclenchement automatique (${AUTO_REFRESH_INTERVAL / 60000} min)`);
+      triggerRef();
     }, AUTO_REFRESH_INTERVAL);
-
-    // Realtime: when cron updates delivery_date_updated_at, re-fetch immediately
-    const ch = supabase.channel('cron_status_watch')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
-        fetchLastRefreshRef.current();
-      })
-      .subscribe();
 
     return () => {
       clearInterval(tickInterval);
       clearInterval(autoRefreshInterval);
-      ch.unsubscribe();
     };
-  }, [fetchLastRefresh, triggerRefresh]);
+  }, [triggerRefresh]);
 
   const getStatus = () => {
     if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
     const minAgo = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
-    if (minAgo < 45)  return { label: `Màj il y a ${minAgo} min`, color: 'text-green-300', dot: 'bg-green-400' };
+    if (minAgo < 45)  return { label: `Màj il y a ${minAgo} min`, color: 'text-green-300',  dot: 'bg-green-400' };
     if (minAgo < 120) return { label: `Màj il y a ${minAgo} min`, color: 'text-yellow-300', dot: 'bg-yellow-400' };
     const hAgo = Math.round(minAgo / 60);
     return { label: `Màj il y a ${hAgo}h`, color: 'text-red-300', dot: 'bg-red-400' };
