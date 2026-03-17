@@ -17,39 +17,26 @@ const STATUS = {
   collected: { label: 'Récupéré',    color: '#9ca3af', bg: '#f9fafb', pulse: false },
 };
 
-const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
+const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
+// Le timer est local — il se met à jour dès que triggerRefresh tourne, sans dépendre de la BDD
 function useCronStatus() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [, setTick]                   = useState(0);
-
-  const fetchLastRefresh = useCallback(async () => {
-    const { data } = await supabase
-      .from('orders').select('delivery_date_updated_at')
-      .not('delivery_date_updated_at', 'is', null)
-      .order('delivery_date_updated_at', { ascending: false })
-      .limit(1).maybeSingle();
-    if (data?.delivery_date_updated_at) setLastRefresh(new Date(data.delivery_date_updated_at));
-  }, []);
-
-  // Ref pour déclencher triggerRefresh depuis l'auto-interval sans stale closure
   const triggerRefreshRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
-    fetchLastRefresh();
-    const tick = setInterval(() => { setTick(t => t + 1); fetchLastRefresh(); }, 60000);
+    // Re-render every minute so label ticks
+    const tick = setInterval(() => setTick(t => t + 1), 60000);
 
-    // Auto-refresh toutes les 30 minutes
+    // Auto-refresh toutes les X minutes
     const autoRefresh = setInterval(() => {
-      console.log('[Auto-refresh] Déclenchement automatique toutes les 30 min');
+      console.log(`[Auto-refresh] Déclenchement automatique (${AUTO_REFRESH_INTERVAL / 60000} min)`);
       triggerRefreshRef.current?.();
     }, AUTO_REFRESH_INTERVAL);
 
-    const ch = supabase.channel('cron_watch')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => fetchLastRefresh())
-      .subscribe();
-    return () => { clearInterval(tick); clearInterval(autoRefresh); ch.unsubscribe(); };
-  }, [fetchLastRefresh]);
+    return () => { clearInterval(tick); clearInterval(autoRefresh); };
+  }, []);
 
   const getStatus = () => {
     if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
@@ -59,7 +46,7 @@ function useCronStatus() {
     return               { label: `Màj il y a ${Math.round(min/60)}h`,  color: 'text-red-300',    dot: 'bg-red-400' };
   };
 
-  return { cronStatus: getStatus(), lastRefresh, triggerRefreshRef };
+  return { cronStatus: getStatus(), setLastRefresh, triggerRefreshRef };
 }
 
 function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirmer', confirmColor = 'red', extraButton = null }: any) {
@@ -211,7 +198,7 @@ export function InventairePage() {
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
-  const { cronStatus, lastRefresh: cronLastRefresh, triggerRefreshRef } = useCronStatus();
+  const { cronStatus, setLastRefresh, triggerRefreshRef } = useCronStatus();
   const [refreshing, setRefreshing] = useState(false);
   const [, setRefreshKey] = useState(0);
   const refreshingRef = useRef(false);
@@ -241,6 +228,7 @@ export function InventairePage() {
         }
         await new Promise(r => setTimeout(r, 800));
       }
+      setLastRefresh(new Date()); // mettre à jour le timer local immédiatement
       await fetchOrders();
       setRefreshKey(k => k + 1);
     } finally {
@@ -248,7 +236,7 @@ export function InventairePage() {
       setRefreshing(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchOrders]);
+  }, [fetchOrders, setLastRefresh]);
 
   // Connecter triggerRefresh au ref pour l'auto-refresh
   useEffect(() => { triggerRefreshRef.current = triggerRefresh; }, [triggerRefresh, triggerRefreshRef]);
