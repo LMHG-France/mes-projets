@@ -19,34 +19,32 @@ const STATUS = {
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-// Le timer est local — il se met à jour dès que triggerRefresh tourne, sans dépendre de la BDD
-function useCronStatus() {
+// Le timer est local — indépendant de la BDD
+// triggerRefresh est passé en paramètre pour éviter les stale closures via ref
+function useCronStatus(triggerRefresh: () => Promise<void>) {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [, setTick]                   = useState(0);
-  const triggerRefreshRef = useRef<(() => Promise<void>) | null>(null);
+  const triggerRef = useRef(triggerRefresh);
+  useEffect(() => { triggerRef.current = triggerRefresh; }, [triggerRefresh]);
 
   useEffect(() => {
-    // Re-render every minute so label ticks
-    const tick = setInterval(() => setTick(t => t + 1), 60000);
-
-    // Auto-refresh toutes les X minutes
+    const tick        = setInterval(() => setTick(t => t + 1), 60000);
     const autoRefresh = setInterval(() => {
-      console.log(`[Auto-refresh] Déclenchement automatique (${AUTO_REFRESH_INTERVAL / 60000} min)`);
-      triggerRefreshRef.current?.();
+      console.log(`[Auto-refresh] ${AUTO_REFRESH_INTERVAL / 60000} min`);
+      triggerRef.current();
     }, AUTO_REFRESH_INTERVAL);
-
     return () => { clearInterval(tick); clearInterval(autoRefresh); };
-  }, []);
+  }, []); // interval créé une seule fois, triggerRef.current toujours à jour
 
   const getStatus = () => {
     if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
     const min = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
-    if (min < 45)  return { label: `Màj il y a ${min} min`,              color: 'text-green-300',  dot: 'bg-green-400' };
-    if (min < 120) return { label: `Màj il y a ${min} min`,              color: 'text-yellow-300', dot: 'bg-yellow-400' };
-    return               { label: `Màj il y a ${Math.round(min/60)}h`,  color: 'text-red-300',    dot: 'bg-red-400' };
+    if (min < 45)  return { label: `Màj il y a ${min} min`,             color: 'text-green-300',  dot: 'bg-green-400' };
+    if (min < 120) return { label: `Màj il y a ${min} min`,             color: 'text-yellow-300', dot: 'bg-yellow-400' };
+    return               { label: `Màj il y a ${Math.round(min/60)}h`, color: 'text-red-300',    dot: 'bg-red-400' };
   };
 
-  return { cronStatus: getStatus(), setLastRefresh, triggerRefreshRef };
+  return { cronStatus: getStatus(), setLastRefresh };
 }
 
 function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirmer', confirmColor = 'red', extraButton = null }: any) {
@@ -198,13 +196,16 @@ export function InventairePage() {
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
-  const { cronStatus, setLastRefresh, triggerRefreshRef } = useCronStatus();
   const [refreshing, setRefreshing] = useState(false);
   const [, setRefreshKey] = useState(0);
   const refreshingRef = useRef(false);
+  // stableRefresh: wrapper stable passé à useCronStatus pour l'auto-refresh
+  // Il appelle toujours la dernière version de triggerRefresh via une ref interne
+  const triggerRefreshCallRef = useRef<() => Promise<void>>(async () => {});
 
   const triggerRefresh = useCallback(async () => {
     if (refreshingRef.current) return;
+    refreshingRef.current = true;
     setRefreshing(true);
     try {
       const url = import.meta.env.VITE_SUPABASE_URL;
@@ -228,18 +229,27 @@ export function InventairePage() {
         }
         await new Promise(r => setTimeout(r, 800));
       }
-      setLastRefresh(new Date()); // mettre à jour le timer local immédiatement
-      await fetchOrders();
       setRefreshKey(k => k + 1);
+      await fetchOrders();
     } finally {
       refreshingRef.current = false;
       setRefreshing(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchOrders, setLastRefresh]);
+  }, [fetchOrders]);
 
-  // Connecter triggerRefresh au ref pour l'auto-refresh
-  useEffect(() => { triggerRefreshRef.current = triggerRefresh; }, [triggerRefresh, triggerRefreshRef]);
+  // Garder la ref à jour (sans recréer l'interval à chaque render)
+  useEffect(() => { triggerRefreshCallRef.current = triggerRefresh; }, [triggerRefresh]);
+
+  // stableRefresh : stable, passé à useCronStatus pour l'auto-refresh
+  // Il met aussi à jour le timer local après chaque exécution
+  const setLastRefreshRef = useRef<((d: Date) => void) | null>(null);
+  const stableRefresh = useCallback(async () => {
+    await triggerRefreshCallRef.current();
+    setLastRefreshRef.current?.(new Date());
+  }, []);
+
+  const { cronStatus, setLastRefresh } = useCronStatus(stableRefresh);
+  useEffect(() => { setLastRefreshRef.current = setLastRefresh; }, [setLastRefresh]);
 
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
   const [selected, setSelected]               = useState<string | null>(null);
@@ -437,7 +447,7 @@ export function InventairePage() {
                 <span className={`w-2 h-2 rounded-full ${cronStatus.dot}`} />
                 {cronStatus.label}
               </span>
-              <button onClick={triggerRefresh} disabled={refreshing}
+              <button onClick={stableRefresh} disabled={refreshing}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50 font-medium">
                 <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
                 {refreshing ? 'Refresh...' : 'Refresh'}
@@ -503,8 +513,14 @@ export function InventairePage() {
                           </div>
                           <div className="mt-2 h-0.5 rounded-full overflow-hidden bg-gray-100">
                             <div className="h-full rounded-full transition-all" style={{
-                              background: st === 'delivered' ? '#10b981' : st === 'available' ? '#f59e0b' : '#3b82f6',
-                              width: st === 'delivered' ? '100%' : st === 'available' ? '70%' : '35%'
+                              background: st === 'delivered' ? '#10b981'
+                                        : st === 'available' ? '#f59e0b'
+                                        : (dl !== null && dl <= 0) ? '#10b981'
+                                        : '#3b82f6',
+                              width: st === 'delivered' ? '100%'
+                                   : st === 'available' ? '70%'
+                                   : (dl !== null && dl <= 0) ? '85%'
+                                   : '35%'
                             }} />
                           </div>
                         </div>
