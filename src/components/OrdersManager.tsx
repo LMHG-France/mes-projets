@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck, RefreshCw } from 'lucide-react';
-import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
+import { useOrders, callAfterShip, Order, DeliveryStatus } from '../hooks/useOrders';
 import { OrderForm } from './OrderForm';
 import { OrdersList } from './OrdersList';
 import { supabase } from '../lib/supabase';
@@ -8,23 +8,16 @@ import { supabase } from '../lib/supabase';
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 function useCronStatus(fetchOrders: () => Promise<void>) {
-  // lastRefresh est stocké localement — indépendant de la BDD
-  // Ainsi le timer se met à jour dès que triggerRefresh tourne, même si AfterShip échoue
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing]   = useState(false);
-  const [, setTick] = useState(0); // force re-render every minute
-
-  const refreshingRef   = useRef(false);
-  const fetchOrdersRef  = useRef(fetchOrders);
-  useEffect(() => { fetchOrdersRef.current = fetchOrders; }, [fetchOrders]);
+  const [, setTick] = useState(0);
+  const isRefreshingRef = useRef(false);
 
   const triggerRefresh = useCallback(async () => {
-    if (refreshingRef.current) return; // éviter les appels concurrents
-    refreshingRef.current = true;
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
     setRefreshing(true);
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY;
       const { data: ordersToRefresh } = await supabase
         .from('orders')
         .select('id, tracking_link')
@@ -32,44 +25,30 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
         .neq('tracking_link', '')
         .neq('delivery_status', 'collected');
       for (const o of (ordersToRefresh || [])) {
-        try {
-          const res = await fetch(`${supabaseUrl}/functions/v1/extract_delivery_date`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anonKey}` },
-            body: JSON.stringify({ order_id: o.id, tracking_url: o.tracking_link }),
-          });
-          if (!res.ok) console.error(`Erreur refresh order ${o.id}: HTTP ${res.status}`);
-        } catch (e) {
-          console.error(`Erreur refresh order ${o.id}:`, e);
-        }
+        await callAfterShip(o.id, o.tracking_link!);
         await new Promise(r => setTimeout(r, 800));
       }
-      // Mettre à jour le timer LOCAL immédiatement — indépendant de la BDD
       setLastRefresh(new Date());
-      // Recharger les commandes pour refléter les changements
-      await fetchOrdersRef.current();
+      await fetchOrders();
     } finally {
-      refreshingRef.current = false;
+      isRefreshingRef.current = false;
       setRefreshing(false);
     }
+  }, [fetchOrders]);
+
+  // Re-render toutes les minutes pour le label
+  useEffect(() => {
+    const tick = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(tick);
   }, []);
 
+  // Auto-refresh toutes les X minutes
   useEffect(() => {
-    const triggerRef = triggerRefresh; // capture stable via useCallback
-
-    // Re-render every minute so label ticks ("il y a 1 min", "il y a 2 min"...)
-    const tickInterval = setInterval(() => setTick(t => t + 1), 60000);
-
-    // Auto-refresh toutes les X minutes
-    const autoRefreshInterval = setInterval(() => {
-      console.log(`[Auto-refresh] Déclenchement automatique (${AUTO_REFRESH_INTERVAL / 60000} min)`);
-      triggerRef();
+    const interval = setInterval(() => {
+      console.log(`[Auto-refresh] ${AUTO_REFRESH_INTERVAL / 60000} min`);
+      triggerRefresh();
     }, AUTO_REFRESH_INTERVAL);
-
-    return () => {
-      clearInterval(tickInterval);
-      clearInterval(autoRefreshInterval);
-    };
+    return () => clearInterval(interval);
   }, [triggerRefresh]);
 
   const getStatus = () => {
@@ -77,8 +56,7 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
     const minAgo = Math.round((Date.now() - lastRefresh.getTime()) / 60000);
     if (minAgo < 45)  return { label: `Màj il y a ${minAgo} min`, color: 'text-green-300',  dot: 'bg-green-400' };
     if (minAgo < 120) return { label: `Màj il y a ${minAgo} min`, color: 'text-yellow-300', dot: 'bg-yellow-400' };
-    const hAgo = Math.round(minAgo / 60);
-    return { label: `Màj il y a ${hAgo}h`, color: 'text-red-300', dot: 'bg-red-400' };
+    return { label: `Màj il y a ${Math.round(minAgo / 60)}h`, color: 'text-red-300', dot: 'bg-red-400' };
   };
 
   return { status: getStatus(), refreshing, triggerRefresh };
