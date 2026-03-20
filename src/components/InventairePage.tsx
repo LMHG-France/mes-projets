@@ -19,22 +19,15 @@ const STATUS = {
 
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-// Le timer est local — indépendant de la BDD
-// triggerRefresh est passé en paramètre pour éviter les stale closures via ref
-function useCronStatus(triggerRefresh: () => Promise<void>) {
+function useAutoRefreshTimer() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  const [, setTick]                   = useState(0);
-  const triggerRef = useRef(triggerRefresh);
-  useEffect(() => { triggerRef.current = triggerRefresh; }, [triggerRefresh]);
+  const [, setTick] = useState(0);
 
+  // Re-render toutes les minutes pour que le label "il y a X min" reste à jour
   useEffect(() => {
-    const tick        = setInterval(() => setTick(t => t + 1), 60000);
-    const autoRefresh = setInterval(() => {
-      console.log(`[Auto-refresh] ${AUTO_REFRESH_INTERVAL / 60000} min`);
-      triggerRef.current();
-    }, AUTO_REFRESH_INTERVAL);
-    return () => { clearInterval(tick); clearInterval(autoRefresh); };
-  }, []); // interval créé une seule fois, triggerRef.current toujours à jour
+    const tick = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(tick);
+  }, []);
 
   const getStatus = () => {
     if (!lastRefresh) return { label: 'Jamais rafraîchi', color: 'text-red-300', dot: 'bg-red-400' };
@@ -197,15 +190,13 @@ export function InventairePage() {
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
   const [refreshing, setRefreshing] = useState(false);
-  const [, setRefreshKey] = useState(0);
-  const refreshingRef = useRef(false);
-  // stableRefresh: wrapper stable passé à useCronStatus pour l'auto-refresh
-  // Il appelle toujours la dernière version de triggerRefresh via une ref interne
-  const triggerRefreshCallRef = useRef<() => Promise<void>>(async () => {});
+  const isRefreshingRef = useRef(false);
+  const { cronStatus, setLastRefresh } = useAutoRefreshTimer();
 
+  // Fonction de refresh — appelée manuellement ET par l'auto-refresh
   const triggerRefresh = useCallback(async () => {
-    if (refreshingRef.current) return;
-    refreshingRef.current = true;
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
     setRefreshing(true);
     try {
       const url = import.meta.env.VITE_SUPABASE_URL;
@@ -229,27 +220,22 @@ export function InventairePage() {
         }
         await new Promise(r => setTimeout(r, 800));
       }
-      setRefreshKey(k => k + 1);
+      setLastRefresh(new Date()); // timer local mis à jour immédiatement
       await fetchOrders();
     } finally {
-      refreshingRef.current = false;
+      isRefreshingRef.current = false;
       setRefreshing(false);
     }
-  }, [fetchOrders]);
+  }, [fetchOrders, setLastRefresh]);
 
-  // Garder la ref à jour (sans recréer l'interval à chaque render)
-  useEffect(() => { triggerRefreshCallRef.current = triggerRefresh; }, [triggerRefresh]);
-
-  // stableRefresh : stable, passé à useCronStatus pour l'auto-refresh
-  // Il met aussi à jour le timer local après chaque exécution
-  const setLastRefreshRef = useRef<((d: Date) => void) | null>(null);
-  const stableRefresh = useCallback(async () => {
-    await triggerRefreshCallRef.current();
-    setLastRefreshRef.current?.(new Date());
-  }, []);
-
-  const { cronStatus, setLastRefresh } = useCronStatus(stableRefresh);
-  useEffect(() => { setLastRefreshRef.current = setLastRefresh; }, [setLastRefresh]);
+  // Auto-refresh toutes les X minutes — interval simple, triggerRefresh stable via useCallback
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log(`[Auto-refresh] ${AUTO_REFRESH_INTERVAL / 60000} min`);
+      triggerRefresh();
+    }, AUTO_REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, [triggerRefresh]);
 
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
   const [selected, setSelected]               = useState<string | null>(null);
@@ -447,7 +433,7 @@ export function InventairePage() {
                 <span className={`w-2 h-2 rounded-full ${cronStatus.dot}`} />
                 {cronStatus.label}
               </span>
-              <button onClick={stableRefresh} disabled={refreshing}
+              <button onClick={triggerRefresh} disabled={refreshing}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50 font-medium">
                 <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
                 {refreshing ? 'Refresh...' : 'Refresh'}
