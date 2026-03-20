@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
+import { useOrders, callAfterShip, Order, DeliveryStatus } from '../hooks/useOrders';
 import { useStock } from '../hooks/useStock';
 import { OrderForm } from './OrderForm';
 
@@ -236,6 +236,25 @@ export function InventairePage() {
     }, AUTO_REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [triggerRefresh]);
+
+  // Sync au chargement : pour chaque commande avec un lien de suivi
+  // mais jamais synchronisée avec AfterShip (delivery_date_updated_at === null)
+  useEffect(() => {
+    const unsynced = allDbOrders.filter(
+      o => o.tracking_link && !o.delivery_date_updated_at && o.delivery_status !== 'collected'
+    );
+    if (unsynced.length === 0) return;
+    console.log(`[Sync] ${unsynced.length} commande(s) jamais synchronisée(s) avec AfterShip`);
+    (async () => {
+      for (const o of unsynced) {
+        await callAfterShip(o.id, o.tracking_link!);
+        await new Promise(r => setTimeout(r, 800));
+      }
+      await fetchOrders();
+    })();
+  // On ne veut déclencher ça qu'une fois quand allDbOrders est chargé
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allDbOrders.length > 0 ? 'loaded' : 'empty']);
 
   const [tab, setTab]                         = useState<'transit' | 'stock'>('transit');
   const [selected, setSelected]               = useState<string | null>(null);
@@ -493,7 +512,11 @@ export function InventairePage() {
                                   <p className={`text-xs font-medium ${dl !== null && dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
                                     {dl === 0 ? 'Auj.' : fmtShort(order.expected_delivery_date)}
                                   </p>
-                                ) : <p className="text-xs text-gray-300">—</p>}
+                                ) : order.tracking_link ? (
+                                  <p className="text-xs text-gray-300">—</p>
+                                ) : (
+                                  <p className="text-xs font-medium text-orange-400">⚠ Suivi manquant</p>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -561,6 +584,12 @@ export function InventairePage() {
                             </button>
                           </div>
                         </div>
+                        {!selectedOrder.tracking_link && (
+                          <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium">
+                            <span className="text-base">⚠️</span>
+                            <span>Lien de suivi manquant — Modifie la commande pour l'ajouter et activer le tracking automatique.</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-50 flex-wrap">
                           <div className="flex items-center gap-1.5 text-sm text-gray-500"><Box size={14} className="text-gray-300" /><span><strong className="text-gray-800">{qty}</strong> unités</span></div>
                           <div className="flex items-center gap-1.5 text-sm text-gray-500"><Package size={14} className="text-gray-300" /><span><strong className="text-gray-800">{selectedOrder.items.length}</strong> articles</span></div>
