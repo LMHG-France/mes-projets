@@ -23,6 +23,7 @@ export interface Order {
   expected_delivery_date: string | null;
   delivery_status: DeliveryStatus;
   delivery_type: string | null;
+  delivery_date_updated_at: string | null; // null = jamais synchronisé avec AfterShip
   hidden_in_orders: boolean;
   created_at: string;
   updated_at: string;
