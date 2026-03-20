@@ -28,6 +28,24 @@ export interface Order {
   updated_at: string;
 }
 
+// Envoie le lien de tracking à AfterShip via l'edge function
+// Appelé à la création d'une commande ET lors du refresh manuel/auto
+export async function callAfterShip(orderId: string, trackingLink: string): Promise<void> {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  try {
+    const res = await fetch(`${url}/functions/v1/extract_delivery_date`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ order_id: orderId, tracking_url: trackingLink }),
+    });
+    if (!res.ok) console.error(`AfterShip error for order ${orderId}: HTTP ${res.status}`);
+    else console.log(`AfterShip OK for order ${orderId}`);
+  } catch (e) {
+    console.error(`AfterShip fetch error for order ${orderId}:`, e);
+  }
+}
+
 export function useOrders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -54,7 +72,6 @@ export function useOrders() {
     if (!user) { setOrders([]); setLoading(false); return; }
     fetchOrders();
 
-    // Polling toutes les 3 minutes en fallback du Realtime
     const pollInterval = setInterval(() => { fetchOrders(); }, 3 * 60 * 1000);
 
     const channel = supabase
@@ -97,13 +114,19 @@ export function useOrders() {
       if (orderData.expected_delivery_date) insertData.expected_delivery_date = orderData.expected_delivery_date;
       const { data, error: err } = await supabase.from('orders').insert(insertData).select().single();
       if (err) throw err;
-      if (data) setOrders(prev => [data, ...prev]);
+      if (data) {
+        setOrders(prev => [data, ...prev]);
+        // Envoyer immédiatement à AfterShip si un lien de tracking est fourni
+        if (data.tracking_link) {
+          console.log(`[addOrder] Envoi à AfterShip pour la commande ${data.id}`);
+          callAfterShip(data.id, data.tracking_link); // fire-and-forget, ne bloque pas l'UI
+        }
+      }
     } catch (err) { throw err instanceof Error ? err : new Error('Failed to add order'); }
   };
 
   const deleteOrder = async (orderId: string) => {
     try {
-      // Soft delete : masque dans "Commandes" mais conserve dans "Stock en attente"
       const { error: err } = await supabase.from('orders').update({ hidden_in_orders: true }).eq('id', orderId);
       if (err) throw err;
       setOrders(prev => prev.filter(o => o.id !== orderId));
