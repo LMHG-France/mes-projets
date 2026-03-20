@@ -310,7 +310,7 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
               </div>
 
               <div className="mb-6 flex flex-wrap items-center gap-4">
-                {selectedOrder.tracking_link && (
+                {selectedOrder.tracking_link ? (
                   <a
                     href={selectedOrder.tracking_link}
                     target="_blank"
@@ -320,6 +320,10 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
                     <ExternalLink size={16} />
                     Suivre la commande
                   </a>
+                ) : (
+                  <span className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-orange-50 border border-orange-200 text-orange-700">
+                    ⚠️ Lien de suivi manquant
+                  </span>
                 )}
                 <div className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg ${
                   selectedOrder.expected_delivery_date
