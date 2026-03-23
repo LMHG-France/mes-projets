@@ -273,6 +273,24 @@ export function OrdersManager() {
   };
   const handleCloseForm = () => { setShowForm(false); setEditingOrder(null); };
 
+  const handleDuplicateOrder = async (order: Order, times: number) => {
+    const base: Omit<Order, 'id'|'created_at'|'updated_at'> = {
+      supplier_name:         order.supplier_name,
+      items:                 order.items,
+      total_price:           order.total_price,
+      tracking_link:         null, // chaque commande aura son propre lien de suivi
+      order_link:            order.order_link,
+      expected_delivery_date: null,
+      delivery_status:       'pending',
+      delivery_type:         order.delivery_type,
+      delivery_date_updated_at: null,
+      hidden_in_orders:      false,
+    };
+    for (let i = 0; i < times; i++) {
+      await addOrder(base);
+    }
+  };
+
   return (
     <div className="py-8 px-4 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -316,7 +334,7 @@ export function OrdersManager() {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <OrdersList orders={orders} onEdit={handleEditOrder} onDelete={deleteOrder} isLoading={loading} onFilteredOrdersChange={setFilteredOrders} />
+            <OrdersList orders={orders} onEdit={handleEditOrder} onDelete={deleteOrder} onDuplicate={handleDuplicateOrder} isLoading={loading} onFilteredOrdersChange={setFilteredOrders} />
           </div>
         )}
 
