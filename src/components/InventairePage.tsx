@@ -708,56 +708,56 @@ export function InventairePage() {
         </div>
       </div>
 
-      {confirmDeleteId && (
-        {/* Modal duplication */}
-        {duplicateOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-              <h3 className="text-base font-bold text-gray-900 mb-1">Dupliquer la commande</h3>
-              <p className="text-sm text-gray-500 mb-5">
-                <span className="font-medium text-gray-700">{duplicateOrder.supplier_name}</span> — {duplicateOrder.total_price.toFixed(2)} €
-              </p>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de copies</label>
-              <div className="flex items-center gap-3 mb-6">
-                <button onClick={() => setDuplicateTimes(t => Math.max(1, t - 1))}
-                  className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center">−</button>
-                <span className="text-2xl font-bold text-gray-900 w-8 text-center">{duplicateTimes}</span>
-                <button onClick={() => setDuplicateTimes(t => Math.min(20, t + 1))}
-                  className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center">+</button>
-                <span className="text-sm text-gray-400 ml-1">commande{duplicateTimes > 1 ? 's' : ''} créée{duplicateTimes > 1 ? 's' : ''}</span>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setDuplicateOrder(null)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50">Annuler</button>
-                <button
-                  disabled={duplicating}
-                  onClick={async () => {
-                    setDuplicating(true);
-                    try {
-                      const base = {
-                        supplier_name: duplicateOrder.supplier_name,
-                        items: duplicateOrder.items,
-                        total_price: duplicateOrder.total_price,
-                        tracking_link: null,
-                        order_link: duplicateOrder.order_link,
-                        expected_delivery_date: null,
-                        delivery_status: 'pending' as DeliveryStatus,
-                        delivery_type: duplicateOrder.delivery_type,
-                        delivery_date_updated_at: null,
-                        hidden_in_orders: false,
-                      };
-                      for (let i = 0; i < duplicateTimes; i++) await addOrder(base);
-                      setDuplicateOrder(null);
-                    } finally { setDuplicating(false); }
-                  }}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {duplicating ? 'Création...' : <><Copy size={14} /> Créer {duplicateTimes}x</>}
-                </button>
-              </div>
+      {/* Modal duplication */}
+      {duplicateOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-base font-bold text-gray-900 mb-1">Dupliquer la commande</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              <span className="font-medium text-gray-700">{duplicateOrder.supplier_name}</span> — {duplicateOrder.total_price.toFixed(2)} €
+            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de copies</label>
+            <div className="flex items-center gap-3 mb-6">
+              <button onClick={() => setDuplicateTimes(t => Math.max(1, t - 1))}
+                className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center">−</button>
+              <span className="text-2xl font-bold text-gray-900 w-8 text-center">{duplicateTimes}</span>
+              <button onClick={() => setDuplicateTimes(t => Math.min(20, t + 1))}
+                className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center">+</button>
+              <span className="text-sm text-gray-400 ml-1">commande{duplicateTimes > 1 ? 's' : ''} créée{duplicateTimes > 1 ? 's' : ''}</span>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setDuplicateOrder(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50">Annuler</button>
+              <button
+                disabled={duplicating}
+                onClick={async () => {
+                  setDuplicating(true);
+                  try {
+                    const base = {
+                      supplier_name: duplicateOrder.supplier_name,
+                      items: duplicateOrder.items,
+                      total_price: duplicateOrder.total_price,
+                      tracking_link: null,
+                      order_link: duplicateOrder.order_link,
+                      expected_delivery_date: null,
+                      delivery_status: 'pending' as DeliveryStatus,
+                      delivery_type: duplicateOrder.delivery_type,
+                      delivery_date_updated_at: null,
+                      hidden_in_orders: false,
+                    };
+                    for (let i = 0; i < duplicateTimes; i++) await addOrder(base);
+                    setDuplicateOrder(null);
+                  } finally { setDuplicating(false); }
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {duplicating ? 'Création...' : <><Copy size={14} /> Créer {duplicateTimes}x</>}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
+      {confirmDeleteId && (
         <ConfirmModal message="Supprimer cette commande ?" confirmLabel="Supprimer" confirmColor="red"
           onConfirm={() => handleDeleteOrder(confirmDeleteId)}
           onCancel={() => setConfirmDeleteId(null)} />
