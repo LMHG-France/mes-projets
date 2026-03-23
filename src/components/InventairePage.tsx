@@ -775,6 +775,5 @@ export function InventairePage() {
           initialData={editingOrder || undefined}
           isLoading={loadingOrders} />
       )}
-    </>
   );
 }
