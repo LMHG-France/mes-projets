@@ -1,19 +1,23 @@
 import { useState, useMemo } from 'react';
-import { ExternalLink, Trash2, Edit2, Package, Eye, X, Search, Filter } from 'lucide-react';
+import { ExternalLink, Trash2, Edit2, Package, Eye, X, Search, Filter, Copy } from 'lucide-react';
 import { Order } from '../hooks/useOrders';
 
 interface OrdersListProps {
   orders: Order[];
   onEdit: (order: Order) => void;
   onDelete: (orderId: string) => Promise<void>;
+  onDuplicate: (order: Order, times: number) => Promise<void>;
   isLoading?: boolean;
   onFilteredOrdersChange?: (filtered: Order[]) => void;
 }
 
-export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrdersChange }: OrdersListProps) {
+export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, onFilteredOrdersChange }: OrdersListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [duplicateOrder, setDuplicateOrder] = useState<Order | null>(null);
+  const [duplicateTimes, setDuplicateTimes] = useState(2);
+  const [duplicating, setDuplicating] = useState(false);
   const [filterDate, setFilterDate] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'supplier'>('date');
 
@@ -346,6 +350,14 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
 
               <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
                 <button
+                  onClick={() => { setDuplicateOrder(selectedOrder); setDuplicateTimes(2); }}
+                  className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100"
+                  disabled={isLoading || deletingId === selectedOrder.id}
+                >
+                  <Copy size={16} />
+                  Dupliquer
+                </button>
+                <button
                   onClick={() => {
                     onEdit(selectedOrder);
                     setSelectedOrder(null);
@@ -368,6 +380,50 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
                   Supprimer
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal duplication */}
+      {duplicateOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-base font-bold text-gray-900 mb-1">Dupliquer la commande</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              <span className="font-medium text-gray-700">{duplicateOrder.supplier_name}</span> — {duplicateOrder.total_price.toFixed(2)} €
+            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de copies</label>
+            <div className="flex items-center gap-3 mb-6">
+              <button
+                onClick={() => setDuplicateTimes(t => Math.max(1, t - 1))}
+                className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center"
+              >−</button>
+              <span className="text-2xl font-bold text-gray-900 w-8 text-center">{duplicateTimes}</span>
+              <button
+                onClick={() => setDuplicateTimes(t => Math.min(20, t + 1))}
+                className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center"
+              >+</button>
+              <span className="text-sm text-gray-400 ml-1">commande{duplicateTimes > 1 ? 's' : ''} créée{duplicateTimes > 1 ? 's' : ''}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDuplicateOrder(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50"
+              >Annuler</button>
+              <button
+                disabled={duplicating}
+                onClick={async () => {
+                  setDuplicating(true);
+                  try {
+                    await onDuplicate(duplicateOrder, duplicateTimes);
+                    setDuplicateOrder(null);
+                    setSelectedOrder(null);
+                  } finally { setDuplicating(false); }
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {duplicating ? 'Création...' : <><Copy size={14} /> Créer {duplicateTimes}x</>}
+              </button>
             </div>
           </div>
         </div>
