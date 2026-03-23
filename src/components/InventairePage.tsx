@@ -2,7 +2,8 @@ import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import {
   Package, MapPin, Home, Clock, ExternalLink, CheckCircle,
   ChevronRight, Box, Plus, Trash2, Edit2, Check, X,
-  Search, Truck, RefreshCw, CalendarClock, Copy
+  Search, Truck, RefreshCw, CalendarClock, Copy,
+  Link, AlertCircle, ArrowUpDown, Loader2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -222,6 +223,8 @@ export function InventairePage() {
       }
       setLastRefresh(new Date()); // timer local mis à jour immédiatement
       await fetchOrders();
+    } catch(e) {
+      showToast('Erreur lors du refresh : ' + (e instanceof Error ? e.message : String(e)), 'error');
     } finally {
       isRefreshingRef.current = false;
       setRefreshing(false);
@@ -267,6 +270,10 @@ export function InventairePage() {
   const [duplicating, setDuplicating]         = useState(false);
   const [showAdd, setShowAdd]                 = useState(false);
   const [search, setSearch]                   = useState('');
+  const [sortTransit, setSortTransit]         = useState<'delivery'|'name'|'created'>('delivery');
+  const [syncingIds, setSyncingIds]           = useState<Set<string>>(new Set());
+  const [inlineTracking, setInlineTracking]   = useState<{id:string, value:string} | null>(null);
+  const [toast, setToast]                     = useState<{msg:string, type:'success'|'error'} | null>(null);
   const [searchStock, setSearchStock]         = useState('');
   const [sortBy, setSortBy]                   = useState<'name'|'price_asc'|'price_desc'|'qty_asc'|'qty_desc'|'value_desc'|'value_asc'>('name');
 
@@ -277,15 +284,8 @@ export function InventairePage() {
     [allDbOrders]);
 
   const filteredPending = useMemo(() => {
-    const STATUS_PRIORITY: Record<string, number> = {
-      delivered: 0,
-      available: 1,
-      pending:   2,
-      collected: 3,
-    };
-
+    const STATUS_PRIORITY: Record<string, number> = { delivered: 0, available: 1, pending: 2, collected: 3 };
     let list = [...pending];
-
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(o =>
@@ -293,8 +293,10 @@ export function InventairePage() {
         o.items.some(i => i.name.toLowerCase().includes(q))
       );
     }
-
     return list.sort((a, b) => {
+      if (sortTransit === 'name')    return a.supplier_name.localeCompare(b.supplier_name);
+      if (sortTransit === 'created') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      // default: delivery date (status priority first, then date)
       const pa = STATUS_PRIORITY[a.delivery_status ?? 'pending'] ?? 2;
       const pb = STATUS_PRIORITY[b.delivery_status ?? 'pending'] ?? 2;
       if (pa !== pb) return pa - pb;
@@ -303,7 +305,7 @@ export function InventairePage() {
       if (da !== db) return da - db;
       return a.supplier_name.localeCompare(b.supplier_name);
     });
-  }, [pending, search]);
+  }, [pending, search, sortTransit]);
 
   const selectedOrder = filteredPending.find(o => o.id === selected) ?? filteredPending[0] ?? null;
 
@@ -364,6 +366,11 @@ export function InventairePage() {
   const fmtLong  = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const daysLeft = (d: string) => { const t = new Date(); t.setHours(0,0,0,0); const x = new Date(d); x.setHours(0,0,0,0); return Math.round((x.getTime()-t.getTime())/86400000); };
 
+  const showToast = (msg: string, type: 'success'|'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   const handleImportItems = async (items: any[]) => {
     const orderId = importModalOrder?.id;
     for (const item of items) await addItem({ name: item.name, quantity: item.quantity, unit_price: item.unit_price, source_order_id: orderId });
@@ -371,6 +378,23 @@ export function InventairePage() {
       await supabase.from('orders').update({ hidden_in_stock: true }).eq('id', orderId);
     }
     setTab('stock');
+  };
+
+  const handleSaveTrackingLink = async (orderId: string, trackingLink: string) => {
+    const url = trackingLink.trim();
+    if (!url) return;
+    try {
+      await updateOrder(orderId, { tracking_link: url });
+      setSyncingIds(prev => new Set([...prev, orderId]));
+      callAfterShip(orderId, url).finally(() => {
+        setSyncingIds(prev => { const s = new Set(prev); s.delete(orderId); return s; });
+        fetchOrders();
+      });
+      setInlineTracking(null);
+      showToast('Lien de suivi ajouté, synchronisation AfterShip en cours…');
+    } catch {
+      showToast('Erreur lors de la mise à jour du lien', 'error');
+    }
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -476,12 +500,21 @@ export function InventairePage() {
             ) : (
               <div className="flex gap-4 items-start">
                 <div className="w-96 flex-shrink-0 bg-white rounded-2xl shadow-sm flex flex-col overflow-hidden">
-                  <div className="p-2 border-b border-gray-50">
+                  <div className="p-2 border-b border-gray-50 space-y-1.5">
                     <div className="relative">
                       <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..."
                         className="w-full pl-8 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" />
                       {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={12} /></button>}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ArrowUpDown size={11} className="text-gray-300 ml-1" />
+                      {(['delivery','name','created'] as const).map(s => (
+                        <button key={s} onClick={() => setSortTransit(s)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${sortTransit === s ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-100'}`}>
+                          {s === 'delivery' ? 'Livraison' : s === 'name' ? 'Nom' : 'Date ajout'}
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <div className="p-2 flex flex-col gap-1 overflow-y-auto max-h-[600px]">
@@ -497,8 +530,13 @@ export function InventairePage() {
                         <div key={order.id} className={`order-row px-3 py-3 ${isActive ? 'active' : ''}`} onClick={() => setSelected(order.id)}>
                           <div className="flex items-center gap-2.5">
                             <div className="relative flex-shrink-0 w-2.5 h-2.5">
-                              <div className="w-2.5 h-2.5 rounded-full dot-p" style={{ background: cfg.color }} />
-                              {cfg.pulse && <div className="ring-p border" style={{ borderColor: cfg.color }} />}
+                              {syncingIds.has(order.id)
+                                ? <Loader2 size={10} className="animate-spin text-blue-400" />
+                                : <>
+                                    <div className="w-2.5 h-2.5 rounded-full dot-p" style={{ background: cfg.color }} />
+                                    {cfg.pulse && <div className="ring-p border" style={{ borderColor: cfg.color }} />}
+                                  </>
+                              }
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-1">
@@ -591,11 +629,51 @@ export function InventairePage() {
                             </button>
                           </div>
                         </div>
-                        {!selectedOrder.tracking_link && (
-                          <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium">
-                            <span className="text-base">⚠️</span>
-                            <span>Lien de suivi manquant — Modifie la commande pour l'ajouter et activer le tracking automatique.</span>
+                        {/* Sync indicator */}
+                        {syncingIds.has(selectedOrder.id) && (
+                          <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-medium">
+                            <Loader2 size={13} className="animate-spin flex-shrink-0" />
+                            <span>Synchronisation AfterShip en cours…</span>
                           </div>
+                        )}
+                        {/* Inline tracking link input */}
+                        {!selectedOrder.tracking_link && !syncingIds.has(selectedOrder.id) && (
+                          inlineTracking?.id === selectedOrder.id ? (
+                            <div className="mt-3 flex items-center gap-2">
+                              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-50 border border-orange-200">
+                                <Link size={13} className="text-orange-400 flex-shrink-0" />
+                                <input
+                                  autoFocus
+                                  value={inlineTracking.value}
+                                  onChange={e => setInlineTracking({ id: selectedOrder.id, value: e.target.value })}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') handleSaveTrackingLink(selectedOrder.id, inlineTracking.value);
+                                    if (e.key === 'Escape') setInlineTracking(null);
+                                  }}
+                                  placeholder="Coller le lien de suivi…"
+                                  className="flex-1 text-xs bg-transparent outline-none text-gray-700 placeholder-orange-300"
+                                />
+                              </div>
+                              <button onClick={() => handleSaveTrackingLink(selectedOrder.id, inlineTracking.value)}
+                                className="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 flex-shrink-0">
+                                Enregistrer
+                              </button>
+                              <button onClick={() => setInlineTracking(null)}
+                                className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 flex-shrink-0">
+                                <X size={13} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium">
+                              <AlertCircle size={13} className="flex-shrink-0" />
+                              <span className="flex-1">Lien de suivi manquant</span>
+                              <button
+                                onClick={() => setInlineTracking({ id: selectedOrder.id, value: '' })}
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-600 text-white text-xs font-semibold hover:bg-orange-700 flex-shrink-0">
+                                <Link size={11} />Ajouter
+                              </button>
+                            </div>
+                          )
                         )}
                         <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-50 flex-wrap">
                           <div className="flex items-center gap-1.5 text-sm text-gray-500"><Box size={14} className="text-gray-300" /><span><strong className="text-gray-800">{qty}</strong> unités</span></div>
@@ -708,6 +786,14 @@ export function InventairePage() {
         </div>
       </div>
 
+      {/* Toast notifications */}
+      {toast && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-5 py-3 rounded-2xl shadow-xl text-sm font-medium text-white transition-all ${toast.type === 'error' ? 'bg-red-500' : 'bg-gray-900'}`}>
+          {toast.type === 'error' ? <AlertCircle size={16} /> : <Check size={16} />}
+          {toast.msg}
+        </div>
+      )}
+
       {/* Modal duplication */}
       {duplicateOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
@@ -747,6 +833,9 @@ export function InventairePage() {
                     };
                     for (let i = 0; i < duplicateTimes; i++) await addOrder(base);
                     setDuplicateOrder(null);
+                    showToast(`${duplicateTimes} commande${duplicateTimes > 1 ? 's' : ''} créée${duplicateTimes > 1 ? 's' : ''} ✓`);
+                  } catch(e) {
+                    showToast('Erreur lors de la duplication', 'error');
                   } finally { setDuplicating(false); }
                 }}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
