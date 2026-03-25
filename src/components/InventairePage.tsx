@@ -3,7 +3,8 @@ import {
   Package, MapPin, Home, Clock, ExternalLink, CheckCircle,
   ChevronRight, Box, Plus, Trash2, Edit2, Check, X,
   Search, Truck, RefreshCw, CalendarClock, Copy,
-  Link, AlertCircle, ArrowUpDown, Loader2
+  Link, AlertCircle, ArrowUpDown, Loader2,
+  FileText, MessageSquare, CheckCircle2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -273,6 +274,8 @@ export function InventairePage() {
   const [sortTransit, setSortTransit]         = useState<'delivery'|'name'|'created'>('delivery');
   const [syncingIds, setSyncingIds]           = useState<Set<string>>(new Set());
   const [inlineTracking, setInlineTracking]   = useState<{id:string, value:string} | null>(null);
+  const [editingNote, setEditingNote]         = useState<{id:string, value:string} | null>(null);
+  const [savingNote, setSavingNote]           = useState(false);
   const [toast, setToast]                     = useState<{msg:string, type:'success'|'error'} | null>(null);
   const [searchStock, setSearchStock]         = useState('');
   const [sortBy, setSortBy]                   = useState<'name'|'price_asc'|'price_desc'|'qty_asc'|'qty_desc'|'value_desc'|'value_asc'>('name');
@@ -395,6 +398,17 @@ export function InventairePage() {
     } catch {
       showToast('Erreur lors de la mise à jour du lien', 'error');
     }
+  };
+
+  const handleSaveNote = async (orderId: string, note: string) => {
+    setSavingNote(true);
+    try {
+      await updateOrder(orderId, { notes: note.trim() || null } as any);
+      setEditingNote(null);
+      showToast('Note enregistrée');
+    } catch {
+      showToast('Erreur lors de la sauvegarde', 'error');
+    } finally { setSavingNote(false); }
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -715,6 +729,79 @@ export function InventairePage() {
                           })}
                         </div>
                       </div>
+
+                      {/* Notes inline */}
+                      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1.5"><MessageSquare size={12} />Note</p>
+                          {!editingNote && (
+                            <button onClick={() => setEditingNote({ id: selectedOrder.id, value: selectedOrder.notes || '' })}
+                              className="text-xs text-blue-500 hover:text-blue-700 font-medium">
+                              {selectedOrder.notes ? 'Modifier' : '+ Ajouter'}
+                            </button>
+                          )}
+                        </div>
+                        <div className="px-5 py-3">
+                          {editingNote?.id === selectedOrder.id ? (
+                            <div className="space-y-2">
+                              <textarea
+                                autoFocus rows={3}
+                                value={editingNote.value}
+                                onChange={e => setEditingNote({ id: selectedOrder.id, value: e.target.value })}
+                                placeholder="Ajouter une note (n° commande, référence, remarque…)"
+                                className="w-full text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                              />
+                              <div className="flex gap-2">
+                                <button onClick={() => handleSaveNote(selectedOrder.id, editingNote.value)} disabled={savingNote}
+                                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1">
+                                  {savingNote ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle2 size={11} />} Enregistrer
+                                </button>
+                                <button onClick={() => setEditingNote(null)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-xs hover:bg-gray-50">Annuler</button>
+                              </div>
+                            </div>
+                          ) : selectedOrder.notes ? (
+                            <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedOrder.notes}</p>
+                          ) : (
+                            <p className="text-xs text-gray-300 italic">Aucune note</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Historique de suivi */}
+                      {selectedOrder.tracking_checkpoints && selectedOrder.tracking_checkpoints.length > 0 && (
+                        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                          <div className="px-5 py-3 border-b border-gray-50">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1.5"><FileText size={12} />Historique de suivi</p>
+                          </div>
+                          <div className="px-5 py-4">
+                            <div className="relative">
+                              {/* Vertical line */}
+                              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gray-100" />
+                              <div className="space-y-4">
+                                {[...selectedOrder.tracking_checkpoints].reverse().map((cp, i) => {
+                                  const isFirst = i === 0;
+                                  const dotColor = isFirst ? '#3b82f6' : '#d1d5db';
+                                  return (
+                                    <div key={i} className="flex gap-3 relative">
+                                      <div className="flex-shrink-0 w-3.5 h-3.5 rounded-full border-2 bg-white mt-0.5 z-10"
+                                        style={{ borderColor: dotColor, background: isFirst ? dotColor : 'white' }} />
+                                      <div className="flex-1 min-w-0 pb-1">
+                                        <p className={`text-xs font-medium leading-snug ${isFirst ? 'text-gray-900' : 'text-gray-600'}`}>{cp.message}</p>
+                                        {cp.location && <p className="text-xs text-gray-400 mt-0.5">{cp.location}</p>}
+                                        {cp.time && (
+                                          <p className="text-xs text-gray-300 mt-0.5">
+                                            {new Date(cp.time).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
