@@ -13,6 +13,13 @@ export interface OrderItem {
 
 export type DeliveryStatus = 'pending' | 'delivered' | 'available' | 'collected';
 
+export interface TrackingCheckpoint {
+  time:     string | null;
+  message:  string;
+  location: string;
+  tag:      string;
+}
+
 export interface Order {
   id: string;
   supplier_name: string;
@@ -23,7 +30,9 @@ export interface Order {
   expected_delivery_date: string | null;
   delivery_status: DeliveryStatus;
   delivery_type: string | null;
-  delivery_date_updated_at: string | null; // null = jamais synchronisé avec AfterShip
+  delivery_date_updated_at: string | null;
+  tracking_checkpoints: TrackingCheckpoint[] | null;
+  notes: string | null;
   hidden_in_orders: boolean;
   created_at: string;
   updated_at: string;
