@@ -14,7 +14,6 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
   const [items, setItems]                             = useState<OrderItem[]>(initialData?.items || []);
   const [trackingLink, setTrackingLink]               = useState(initialData?.tracking_link || '');
   const [orderLink, setOrderLink]                       = useState(initialData?.order_link || '');
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState(initialData?.expected_delivery_date || '');
   const [error, setError]                             = useState<string | null>(null);
   const [submitting, setSubmitting]                   = useState(false);
   const [extracting, setExtracting]                   = useState(false);
@@ -213,7 +212,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
         total_price:             getTotalPrice(),
         tracking_link:           trackingLink || null,
         order_link:              orderLink || null,
-        expected_delivery_date:  expectedDeliveryDate || null,
+        expected_delivery_date:  null,
         // Si le lien de suivi est supprimé → repasser en "pending"
         ...(trackingWasRemoved ? { delivery_status: 'pending', expected_delivery_date: null } : {}),
       });
@@ -431,24 +430,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
             )}
           </div>
 
-          {/* Livraison prévue */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Livraison prévue
-              {dateExtractStatus === 'success' && (
-                <span className="ml-2 text-xs font-normal text-green-600">
-                  (rempli automatiquement — modifiable)
-                </span>
-              )}
-            </label>
-            <input type="date" value={expectedDeliveryDate}
-              onChange={e => setExpectedDeliveryDate(e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                dateExtractStatus === 'success'
-                  ? 'border-green-400 bg-green-50'
-                  : 'border-gray-300'
-              }`} />
-          </div>
+
 
           {/* Prix total */}
           <div className="bg-gray-50 p-4 rounded-lg">
