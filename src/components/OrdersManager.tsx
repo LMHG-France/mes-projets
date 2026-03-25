@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck, RefreshCw } from 'lucide-react';
+import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck, RefreshCw, Files, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useOrders, callAfterShip, Order, DeliveryStatus } from '../hooks/useOrders';
 import { OrderForm } from './OrderForm';
 import { OrdersList } from './OrdersList';
@@ -275,20 +275,77 @@ export function OrdersManager() {
 
   const handleDuplicateOrder = async (order: Order, times: number) => {
     const base: Omit<Order, 'id'|'created_at'|'updated_at'> = {
-      supplier_name:         order.supplier_name,
-      items:                 order.items,
-      total_price:           order.total_price,
-      tracking_link:         null, // chaque commande aura son propre lien de suivi
-      order_link:            order.order_link,
-      expected_delivery_date: null,
-      delivery_status:       'pending',
-      delivery_type:         order.delivery_type,
+      supplier_name:            order.supplier_name,
+      items:                    order.items,
+      total_price:              order.total_price,
+      tracking_link:            null,
+      order_link:               order.order_link,
+      expected_delivery_date:   null,
+      delivery_status:          'pending',
+      delivery_type:            order.delivery_type,
       delivery_date_updated_at: null,
-      hidden_in_orders:      false,
+      tracking_checkpoints:     null,
+      notes:                    null,
+      hidden_in_orders:         false,
     };
     for (let i = 0; i < times; i++) {
       await addOrder(base);
     }
+  };
+
+  // ── Multi-invoice upload state ──────────────────────────────────────────────
+  const [showBatchUpload, setShowBatchUpload] = useState(false);
+  const [batchFiles, setBatchFiles]           = useState<File[]>([]);
+  const [batchResults, setBatchResults]       = useState<{file: string, status: 'pending'|'processing'|'done'|'error', msg?: string}[]>([]);
+  const [batchRunning, setBatchRunning]       = useState(false);
+  const batchInputRef = useRef<HTMLInputElement>(null);
+
+  const runBatchExtraction = async () => {
+    if (batchFiles.length === 0) return;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    setBatchRunning(true);
+    const results = batchFiles.map(f => ({ file: f.name, status: 'pending' as const }));
+    setBatchResults([...results]);
+
+    for (let i = 0; i < batchFiles.length; i++) {
+      setBatchResults(prev => prev.map((r, j) => j === i ? { ...r, status: 'processing' } : r));
+      try {
+        const file = batchFiles[i];
+        const base64 = await new Promise<string>((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = () => res((reader.result as string).split(',')[1]);
+          reader.onerror = () => rej(new Error('Lecture échouée'));
+          reader.readAsDataURL(file);
+        });
+        const mediaType = file.type === 'application/pdf' ? 'application/pdf' : file.type;
+        const response = await fetch(`${supabaseUrl}/functions/v1/extract_order_data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${anonKey}` },
+          body: JSON.stringify({ file_base64: base64, media_type: mediaType }),
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || 'Extraction échouée');
+        await addOrder({
+          supplier_name:          data.supplier_name || 'Fournisseur inconnu',
+          items:                  data.items || [],
+          total_price:            data.total_price || 0,
+          tracking_link:          data.tracking_link || null,
+          order_link:             data.order_link || null,
+          expected_delivery_date: null,
+          delivery_status:        'pending',
+          delivery_type:          null,
+          delivery_date_updated_at: null,
+          notes:                  null,
+          tracking_checkpoints:   null,
+          hidden_in_orders:       false,
+        });
+        setBatchResults(prev => prev.map((r, j) => j === i ? { ...r, status: 'done', msg: data.supplier_name || '✓' } : r));
+      } catch (e) {
+        setBatchResults(prev => prev.map((r, j) => j === i ? { ...r, status: 'error', msg: e instanceof Error ? e.message : 'Erreur' } : r));
+      }
+    }
+    setBatchRunning(false);
   };
 
   return (
@@ -299,10 +356,16 @@ export function OrdersManager() {
             <h1 className="text-3xl font-bold text-gray-900">Mes Commandes</h1>
             <p className="text-gray-600 mt-1">Gérez toutes vos commandes en un seul endroit</p>
           </div>
-          <button onClick={() => { setEditingOrder(null); setShowForm(true); }}
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-            <Plus size={20} />Ajouter une commande
-          </button>
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => { setShowBatchUpload(true); setBatchFiles([]); setBatchResults([]); }}
+              className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-5 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+              <Files size={18} />Importer des factures
+            </button>
+            <button onClick={() => { setEditingOrder(null); setShowForm(true); }}
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+              <Plus size={20} />Ajouter une commande
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -340,6 +403,81 @@ export function OrdersManager() {
 
         {showForm && (
           <OrderForm onSubmit={editingOrder ? handleUpdateOrder : handleAddOrder} onClose={handleCloseForm} initialData={editingOrder || undefined} isLoading={loading} />
+        )}
+
+        {/* Modal import multi-factures */}
+        {showBatchUpload && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-gray-900">Importer plusieurs factures</h3>
+                <button onClick={() => !batchRunning && setShowBatchUpload(false)} className="text-gray-400 hover:text-gray-600"><XCircle size={20} /></button>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">Chaque fichier créera une commande indépendante via l'IA.</p>
+
+              {/* Drop zone */}
+              {!batchRunning && batchResults.length === 0 && (
+                <div
+                  className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors mb-4"
+                  onClick={() => batchInputRef.current?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); setBatchFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf')); }}
+                >
+                  <Files size={32} className="text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-600">Glisser-déposer ou cliquer</p>
+                  <p className="text-xs text-gray-400 mt-1">PDF ou images — une commande par fichier</p>
+                  <input ref={batchInputRef} type="file" multiple accept="image/*,.pdf" className="hidden"
+                    onChange={e => setBatchFiles(Array.from(e.target.files || []))} />
+                </div>
+              )}
+
+              {/* File list */}
+              {batchFiles.length > 0 && batchResults.length === 0 && (
+                <div className="mb-4 space-y-1 max-h-48 overflow-y-auto">
+                  {batchFiles.map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 text-sm">
+                      <span className="flex-1 truncate text-gray-700">{f.name}</span>
+                      <button onClick={() => setBatchFiles(prev => prev.filter((_, j) => j !== i))} className="text-gray-300 hover:text-red-400"><XCircle size={14} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Progress */}
+              {batchResults.length > 0 && (
+                <div className="mb-4 space-y-2 max-h-64 overflow-y-auto">
+                  {batchResults.map((r, i) => (
+                    <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-gray-100">
+                      {r.status === 'pending'    && <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />}
+                      {r.status === 'processing' && <Loader2 size={16} className="animate-spin text-blue-500 flex-shrink-0" />}
+                      {r.status === 'done'       && <CheckCircle size={16} className="text-emerald-500 flex-shrink-0" />}
+                      {r.status === 'error'      && <XCircle size={16} className="text-red-400 flex-shrink-0" />}
+                      <span className="flex-1 text-sm text-gray-700 truncate">{r.file}</span>
+                      {r.msg && <span className={`text-xs flex-shrink-0 ${r.status === 'error' ? 'text-red-400' : 'text-emerald-600'}`}>{r.msg}</span>}
+                    </div>
+                  ))}
+                  {!batchRunning && (
+                    <p className="text-xs text-center text-gray-400 pt-1">
+                      {batchResults.filter(r => r.status === 'done').length}/{batchResults.length} commandes créées
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button onClick={() => !batchRunning && setShowBatchUpload(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-50" disabled={batchRunning}>
+                  {batchResults.some(r => r.status === 'done') ? 'Fermer' : 'Annuler'}
+                </button>
+                {batchResults.length === 0 && (
+                  <button onClick={runBatchExtraction} disabled={batchFiles.length === 0 || batchRunning}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                    <Files size={15} /> Extraire {batchFiles.length > 0 ? `${batchFiles.length} facture${batchFiles.length > 1 ? 's' : ''}` : ''}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
