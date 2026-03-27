@@ -563,14 +563,14 @@ export function InventairePage() {
                                   <p className="text-xs font-semibold text-emerald-500">{order.delivery_type === 'pickup' ? 'Récupéré' : 'Livré'}</p>
                                 ) : st === 'available' ? (
                                   <p className="text-xs font-medium text-amber-500">Au relais</p>
+                                ) : !order.tracking_link ? (
+                                  <p className="text-xs font-medium text-orange-400">Suivi manquant</p>
                                 ) : order.expected_delivery_date ? (
                                   <p className={`text-xs font-medium ${dl !== null && dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
-                                    {dl === 0 ? 'Auj.' : fmtShort(order.expected_delivery_date)}
+                                    {dl !== null && dl < 0 ? 'En retard' : dl === 0 ? "Auj." : dl === 1 ? 'Demain' : fmtShort(order.expected_delivery_date)}
                                   </p>
-                                ) : order.tracking_link ? (
-                                  <p className="text-xs text-gray-300">—</p>
                                 ) : (
-                                  <p className="text-xs font-medium text-orange-400">⚠ Suivi manquant</p>
+                                  <p className="text-xs text-gray-400">En transit</p>
                                 )}
                               </div>
                             </div>
