@@ -576,16 +576,23 @@ export function InventairePage() {
                             </div>
                           </div>
                           <div className="mt-2 h-0.5 rounded-full overflow-hidden bg-gray-100">
-                            <div className="h-full rounded-full transition-all" style={{
-                              background: st === 'delivered' ? '#10b981'
-                                        : st === 'available' ? '#f59e0b'
-                                        : (dl !== null && dl <= 0) ? '#10b981'
-                                        : '#3b82f6',
-                              width: st === 'delivered' ? '100%'
-                                   : st === 'available' ? '70%'
-                                   : (dl !== null && dl <= 0) ? '85%'
-                                   : '35%'
-                            }} />
+                            {!order.tracking_link ? (
+                              // Pas de suivi : barre hachurée orange
+                              <div className="h-full w-full rounded-full" style={{
+                                background: 'repeating-linear-gradient(90deg, #fed7aa 0px, #fed7aa 4px, transparent 4px, transparent 8px)'
+                              }} />
+                            ) : (
+                              <div className="h-full rounded-full transition-all" style={{
+                                background: st === 'delivered' ? '#10b981'
+                                          : st === 'available' ? '#f59e0b'
+                                          : (dl !== null && dl <= 0) ? '#10b981'
+                                          : '#3b82f6',
+                                width: st === 'delivered' ? '100%'
+                                     : st === 'available' ? '70%'
+                                     : (dl !== null && dl <= 0) ? '85%'
+                                     : '35%'
+                              }} />
+                            )}
                           </div>
                         </div>
                       );
