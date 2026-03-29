@@ -32,6 +32,7 @@ export interface Order {
   delivery_type: string | null;
   delivery_date_updated_at: string | null;
   tracking_checkpoints: TrackingCheckpoint[] | null;
+  pickup_location: string | null;
   notes: string | null;
   hidden_in_orders: boolean;
   created_at: string;
