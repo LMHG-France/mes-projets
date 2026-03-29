@@ -14,7 +14,7 @@ import { OrderForm } from './OrderForm';
 
 const STATUS = {
   pending:   { label: 'En transit',  color: '#3b82f6', bg: '#eff6ff', pulse: true  },
-  available: { label: 'Au relais',   color: '#f59e0b', bg: '#fffbeb', pulse: true  },
+  available: { label: 'Au relais',   color: '#8b5cf6', bg: '#f5f3ff', pulse: true  },
   delivered: { label: 'Livré',       color: '#10b981', bg: '#ecfdf5', pulse: false },
   collected: { label: 'Récupéré',    color: '#9ca3af', bg: '#f9fafb', pulse: false },
 };
@@ -562,9 +562,9 @@ export function InventairePage() {
                                 {st === 'delivered' ? (
                                   <p className="text-xs font-semibold text-emerald-500">{order.delivery_type === 'pickup' ? 'Récupéré' : 'Livré'}</p>
                                 ) : st === 'available' ? (
-                                  <p className="text-xs font-medium text-amber-500">Au relais</p>
+                                  <p className="text-xs font-semibold text-violet-600">Au relais</p>
                                 ) : !order.tracking_link ? (
-                                  <p className="text-xs font-medium text-orange-400">Suivi manquant</p>
+                                  <span className="text-xs font-semibold text-orange-500 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-md">Suivi manquant</span>
                                 ) : order.expected_delivery_date ? (
                                   <p className={`text-xs font-medium ${dl !== null && dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
                                     {dl !== null && dl < 0 ? 'En retard' : dl === 0 ? "Auj." : dl === 1 ? 'Demain' : fmtShort(order.expected_delivery_date)}
@@ -584,11 +584,11 @@ export function InventairePage() {
                             ) : (
                               <div className="h-full rounded-full transition-all" style={{
                                 background: st === 'delivered' ? '#10b981'
-                                          : st === 'available' ? '#f59e0b'
+                                          : st === 'available' ? '#8b5cf6'
                                           : (dl !== null && dl <= 0) ? '#10b981'
                                           : '#3b82f6',
                                 width: st === 'delivered' ? '100%'
-                                     : st === 'available' ? '70%'
+                                     : st === 'available' ? '65%'
                                      : (dl !== null && dl <= 0) ? '85%'
                                      : '35%'
                               }} />
@@ -615,7 +615,10 @@ export function InventairePage() {
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             {selectedOrder.delivery_type === 'pickup'
-                              ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50"><MapPin size={11} />Point relais</span>
+                              ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-violet-200 text-violet-600 bg-violet-50">
+                                  <MapPin size={11} />
+                                  {selectedOrder.pickup_location || 'Point relais'}
+                                </span>
                               : selectedOrder.delivery_type === 'home'
                               ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 bg-gray-50"><Home size={11} />Domicile</span>
                               : null}
