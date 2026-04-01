@@ -1,4 +1,4 @@
-import { Package, Menu, X, LogOut, DollarSign, History } from 'lucide-react';
+import { Package, Menu, X, LogOut, DollarSign, History, CreditCard } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,6 +15,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
     { id: 'inventaire', label: 'Inventaire',      icon: Package    },
     { id: 'historique', label: 'Base produits',   icon: History    },
     { id: 'financial',  label: 'Suivi Financier', icon: DollarSign },
+    { id: 'avoirs',     label: 'Avoirs & Fidélité', icon: CreditCard  },
   ];
 
   return (
