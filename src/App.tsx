@@ -5,6 +5,7 @@ import { InventairePage } from './components/InventairePage';
 import { ProfitManager } from './components/ProfitManager';
 import { FinancialTracker } from './components/FinancialTracker';
 import { HistoriquePage } from './components/HistoriquePage';
+import { AvoirsPage }    from './components/AvoirsPage';
 import { Sidebar } from './components/Sidebar';
 
 function AppContent() {
@@ -43,6 +44,7 @@ function AppContent() {
         {activeView === 'financial'  && <FinancialTracker />}
         {activeView === 'profit'     && <ProfitManager />}
         {activeView === 'historique' && <HistoriquePage />}
+        {activeView === 'avoirs'     && <AvoirsPage />}
       </main>
     </div>
   );
