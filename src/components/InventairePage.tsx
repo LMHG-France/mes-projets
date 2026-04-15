@@ -293,7 +293,8 @@ export function InventairePage() {
       const q = search.toLowerCase();
       list = list.filter(o =>
         o.supplier_name.toLowerCase().includes(q) ||
-        o.items.some(i => i.name.toLowerCase().includes(q))
+        o.items.some(i => i.name.toLowerCase().includes(q)) ||
+        (o.tracking_link && o.tracking_link.toLowerCase().includes(q))
       );
     }
     return list.sort((a, b) => {
