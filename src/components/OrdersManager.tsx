@@ -1,3 +1,4 @@
+import { useTheme } from '../context/ThemeContext';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Plus, Euro, Package, ShoppingCart, Truck, CalendarClock, Home, MapPin, CheckCheck, RefreshCw } from 'lucide-react';
 import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
