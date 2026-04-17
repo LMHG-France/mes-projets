@@ -101,8 +101,8 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
     return (
       <div className="text-center py-12">
         <Package size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
-        <p className="text-gray-500 dark:text-gray-500 text-lg">Aucune commande pour le moment</p>
-        <p className="text-gray-400 dark:text-gray-600 text-sm">Commencez en cliquant sur "Ajouter une commande"</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg">Aucune commande pour le moment</p>
+        <p className="text-gray-400 dark:text-gray-400 text-sm">Commencez en cliquant sur "Ajouter une commande"</p>
       </div>
     );
   }
@@ -112,7 +112,7 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
       <div className="mb-6 space-y-4">
         {/* Barre de recherche */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-600" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-400" size={20} />
           <input
             type="text"
             placeholder="Rechercher par fournisseur, produit ou prix..."
@@ -125,7 +125,7 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
         {/* Filtres */}
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-500 dark:text-gray-500" />
+            <Filter size={18} className="text-gray-500 dark:text-gray-400" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-700">Période:</span>
             <select
               value={filterDate}
@@ -158,7 +158,7 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
                 setSearchQuery('');
                 setFilterDate('all');
               }}
-              className="ml-auto px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600 hover:text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded-lg transition-colors"
+              className="ml-auto px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded-lg transition-colors"
             >
               Réinitialiser
             </button>
@@ -166,7 +166,7 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
         </div>
 
         {/* Résultats */}
-        <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600">
+        <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">
           {filteredAndSortedOrders.length} commande{filteredAndSortedOrders.length !== 1 ? 's' : ''} trouvée{filteredAndSortedOrders.length !== 1 ? 's' : ''}
         </div>
       </div>
@@ -174,22 +174,22 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
       {filteredAndSortedOrders.length === 0 ? (
         <div className="text-center py-12">
           <Package size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
-          <p className="text-gray-500 dark:text-gray-500 text-lg">Aucune commande trouvée</p>
-          <p className="text-gray-400 dark:text-gray-600 text-sm">Essayez de modifier vos critères de recherche</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">Aucune commande trouvée</p>
+          <p className="text-gray-400 dark:text-gray-400 text-sm">Essayez de modifier vos critères de recherche</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAndSortedOrders.map((order) => (
           <div
             key={order.id}
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg dark:shadow-none transition-shadow flex flex-col aspect-square"
+            className="bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg dark:shadow-none transition-shadow flex flex-col aspect-square"
           >
             <div className="flex-1 flex flex-col p-4">
               <div className="mb-3">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {order.supplier_name}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {formatDate(order.created_at)}
                 </p>
               </div>
@@ -198,7 +198,7 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
                 <p className="text-2xl font-bold text-blue-600">
                   {order.total_price.toFixed(2)} €
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {order.items.length} article{order.items.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -206,12 +206,12 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
               <div className="flex-1 mb-3 overflow-hidden">
                 <div className="space-y-1">
                   {order.items.slice(0, 2).map((item, idx) => (
-                    <div key={idx} className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-600 truncate">
+                    <div key={idx} className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-400 truncate">
                       {item.quantity}x {item.name}
                     </div>
                   ))}
                   {order.items.length > 2 && (
-                    <div className="text-xs text-gray-400 dark:text-gray-600">
+                    <div className="text-xs text-gray-400 dark:text-gray-400">
                       +{order.items.length - 2} autre{order.items.length - 2 !== 1 ? 's' : ''}
                     </div>
                   )}
@@ -243,8 +243,8 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
 
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedOrder(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 rounded-t-2xl overflow-hidden">
+          <div className="bg-white dark:bg-gray-850 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white dark:bg-gray-850 border-b border-gray-200 dark:border-gray-700 rounded-t-2xl overflow-hidden">
               <div className="p-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Détails de la commande</h2>
                 <button
@@ -263,12 +263,12 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                       {selectedOrder.supplier_name}
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {formatDate(selectedOrder.created_at)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mb-1">Prix total</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Prix total</p>
                     <p className="text-3xl font-bold text-blue-600">
                       {selectedOrder.total_price.toFixed(2)} €
                     </p>
@@ -277,9 +277,9 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
               </div>
 
               <div className="mb-6">
-                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-3 font-medium">Articles:</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-3 font-medium">Articles:</p>
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <div className="flex items-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
                     <div className="w-20">Quantité</div>
                     <div className="flex-1">Nom du produit</div>
                     <div className="w-32 text-right">Prix Unitaire TTC</div>
@@ -288,14 +288,14 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex items-center text-sm">
                         <div className="w-20">
-                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600">
+                          <span className="bg-white dark:bg-gray-850 px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">
                             {item.quantity}x
                           </span>
                         </div>
                         <div className="flex-1">
                           <div className="text-gray-800 dark:text-gray-200">{item.name}</div>
                           {item.price_ht && item.price_ttc && (
-                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                               HT: {item.price_ht.toFixed(2)} € | TTC: {item.price_ttc.toFixed(2)} €
                             </div>
                           )}
@@ -324,7 +324,7 @@ export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrde
                 <div className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg ${
                   selectedOrder.expected_delivery_date
                     ? 'bg-green-50 dark:bg-green-950 border border-green-200 text-green-700'
-                    : 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-500'
+                    : 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400'
                 }`}>
                   <Package size={16} />
                   <span>
