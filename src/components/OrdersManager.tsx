@@ -23,7 +23,9 @@ function useCronStatus(fetchOrders: () => Promise<void>) {
         .select('id, tracking_link')
         .not('tracking_link', 'is', null)
         .neq('tracking_link', '')
-        .neq('delivery_status', 'collected');
+        .neq('delivery_status', 'collected')
+        .neq('delivery_status', 'delivered')
+        .neq('delivery_status', 'available');
       for (const o of (ordersToRefresh || [])) {
         await callAfterShip(o.id, o.tracking_link!);
         await new Promise(r => setTimeout(r, 800));
