@@ -270,6 +270,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
 }
 
 export function OrdersManager() {
+  const { theme } = useTheme();
   const { orders, loading, addOrder, deleteOrder, updateOrder, updateDeliveryStatus } = useOrders();
   const { status: cronStatus, refreshing, triggerRefresh } = useCronStatus();
   const [showForm, setShowForm]             = useState(false);
@@ -291,7 +292,7 @@ export function OrdersManager() {
   const handleCloseForm = () => { setShowForm(false); setEditingOrder(null); };
 
   return (
-    <div className="py-8 px-4 lg:px-8">
+    <div className="py-8 px-4 lg:px-8 min-h-screen" style={{ background: theme === 'dark' ? '#0f172a' : '#f4f6fb' }}>
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
