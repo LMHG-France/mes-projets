@@ -24,21 +24,21 @@ function AddItemForm({ onAdd, onCancel }: { onAdd: (name: string, qty: number, p
   };
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+    <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 rounded-xl p-4 space-y-3">
       <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Nouvel article</p>
       <input value={name} onChange={e => setName(e.target.value)} placeholder="Nom du produit"
-        className="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        className="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
       <div className="flex gap-2">
         <input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="Qté" min="1"
-          className="w-24 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          className="w-24 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
         <input type="text" value={price} onChange={e => setPrice(e.target.value)} placeholder="Prix unitaire (€)"
-          className="flex-1 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          className="flex-1 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
       </div>
       <div className="flex gap-2">
         <button onClick={handle} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
           <Check size={14} /> Ajouter
         </button>
-        <button onClick={onCancel} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 transition-colors">
+        <button onClick={onCancel} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
           <X size={14} />
         </button>
       </div>
@@ -58,29 +58,29 @@ function StockRow({ item, onUpdate, onDelete }: { item: any; onUpdate: (id: stri
   };
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
       <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white jb bg-gradient-to-br from-blue-500 to-blue-400">
         {item.quantity}
       </div>
-      <span className="flex-1 text-sm text-gray-700 truncate">{item.name}</span>
+      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-700 truncate">{item.name}</span>
       {editing ? (
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <input type="number" value={qty} onChange={e => setQty(e.target.value)}
-            className="w-14 px-2 py-1 text-xs border border-blue-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 jb" />
+            className="w-14 px-2 py-1 text-xs border border-blue-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 jb" />
           <input type="text" value={price} onChange={e => setPrice(e.target.value)}
-            className="w-20 px-2 py-1 text-xs border border-blue-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 jb" />
+            className="w-20 px-2 py-1 text-xs border border-blue-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 jb" />
           <button onClick={save} className="p-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"><Check size={12} /></button>
-          <button onClick={() => setEditing(false)} className="p-1 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-100 transition-colors"><X size={12} /></button>
+          <button onClick={() => setEditing(false)} className="p-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 transition-colors"><X size={12} /></button>
         </div>
       ) : (
         <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="text-xs text-gray-400 jb hidden sm:inline">{item.unit_price > 0 ? `${item.unit_price.toFixed(2)} €/u` : '—'}</span>
-          <span className="text-sm font-semibold text-gray-900 jb w-16 text-right">
+          <span className="text-xs text-gray-400 dark:text-gray-400 jb hidden sm:inline">{item.unit_price > 0 ? `${item.unit_price.toFixed(2)} €/u` : '—'}</span>
+          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 jb w-16 text-right">
             {item.unit_price > 0 ? `${(item.quantity * item.unit_price).toFixed(2)} €` : '—'}
           </span>
           <div className="flex items-center gap-1">
-            <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors" title="Modifier"><Edit2 size={13} /></button>
-            <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Supprimer"><Trash2 size={13} /></button>
+            <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:bg-blue-950 transition-colors" title="Modifier"><Edit2 size={13} /></button>
+            <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg text-gray-400 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:bg-red-950 transition-colors" title="Supprimer"><Trash2 size={13} /></button>
           </div>
         </div>
       )}
@@ -127,22 +127,22 @@ function ImportModal({ order, onImport, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.5)'}}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <div>
-            <h3 className="font-bold text-gray-900">{order.supplier_name}</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Sélectionnez les articles à ajouter au stock</p>
+            <h3 className="font-bold text-gray-900 dark:text-gray-100">{order.supplier_name}</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">Sélectionnez les articles à ajouter au stock</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 transition-colors"><X size={18} /></button>
         </div>
 
         {/* Select all bar */}
-        <div className="flex items-center justify-between px-6 py-2.5 bg-gray-50 border-b border-gray-100">
-          <span className="text-xs text-gray-500 font-medium">{selectedCount} / {order.items.length} articles sélectionnés</span>
+        <div className="flex items-center justify-between px-6 py-2.5 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{selectedCount} / {order.items.length} articles sélectionnés</span>
           <div className="flex gap-2">
             <button onClick={() => toggleAll(true)} className="text-xs px-3 py-1 rounded-lg bg-blue-100 text-blue-600 font-medium hover:bg-blue-200 transition-colors">Tout sélectionner</button>
-            <button onClick={() => toggleAll(false)} className="text-xs px-3 py-1 rounded-lg bg-gray-200 text-gray-500 font-medium hover:bg-gray-300 transition-colors">Aucun</button>
+            <button onClick={() => toggleAll(false)} className="text-xs px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium hover:bg-gray-300 transition-colors">Aucun</button>
           </div>
         </div>
 
@@ -168,20 +168,20 @@ function ImportModal({ order, onImport, onClose }: {
                   min={1} max={item.quantity}
                   onClick={e => e.stopPropagation()}
                   onChange={e => setQuantities(prev => ({ ...prev, [i]: Math.min(item.quantity, Math.max(1, parseInt(e.target.value) || 1)) }))}
-                  className="w-12 px-2 py-1 text-xs border border-gray-200 rounded-lg jb text-center focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                  className="w-12 px-2 py-1 text-xs border border-gray-200 dark:border-gray-700 rounded-lg jb text-center focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 bg-white dark:bg-gray-850"
                 />
                 {/* Name */}
-                <span className="flex-1 text-sm text-gray-700 truncate">{item.name}</span>
+                <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-700 truncate">{item.name}</span>
                 {/* Price */}
-                <span className="text-xs text-gray-400 jb flex-shrink-0">{unitPrice.toFixed(2)} €/u</span>
+                <span className="text-xs text-gray-400 dark:text-gray-400 jb flex-shrink-0">{unitPrice.toFixed(2)} €/u</span>
               </div>
             );
           })}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 transition-colors">Annuler</button>
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">Annuler</button>
           <button onClick={handleImport} disabled={loading || selectedCount === 0}
             className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50">
             {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus size={15} />}
@@ -302,7 +302,7 @@ export function StockManager() {
           {/* Header */}
           <div className="mb-6">
             <p className="text-xs font-semibold tracking-widest text-blue-400 uppercase jb mb-1">Inventaire</p>
-            <h1 className="text-3xl font-bold text-gray-900">Stock en attente</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Stock en attente</h1>
           </div>
 
           {/* Stat cards */}
@@ -314,23 +314,23 @@ export function StockManager() {
               { label:'Unités stock', val:String(stockUnits),              sub:'unités disponibles',             icon:'✅', iconBg:'#fff7ed', tab:'stock' as const },
             ].map((s,i) => (
               <button key={i} onClick={() => setTab(s.tab)}
-                className={`text-left bg-white rounded-2xl shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition-all ${tab === s.tab ? 'ring-2 ring-blue-400' : ''}`}>
+                className={`text-left bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none p-4 flex items-center gap-3 hover:shadow-md dark:shadow-none transition-all ${tab === s.tab ? 'ring-2 ring-blue-400' : ''}`}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{background:s.iconBg}}>{s.icon}</div>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400 font-medium truncate">{s.label}</p>
-                  <p className="text-lg font-bold text-gray-900 jb leading-tight">{s.val}</p>
-                  <p className="text-xs text-gray-400">{s.sub}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400 font-medium truncate">{s.label}</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100 jb leading-tight">{s.val}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400">{s.sub}</p>
                 </div>
               </button>
             ))}
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mb-4 bg-white rounded-xl p-1 shadow-sm w-fit">
-            <button onClick={() => setTab('transit')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'transit' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+          <div className="flex gap-1 mb-4 bg-white dark:bg-gray-850 rounded-xl p-1 shadow-sm dark:shadow-none w-fit">
+            <button onClick={() => setTab('transit')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'transit' ? 'bg-blue-600 text-white shadow-sm dark:shadow-none' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700'}`}>
               🚚 En transit <span className="ml-1.5 text-xs opacity-70">{pending.length}</span>
             </button>
-            <button onClick={() => setTab('stock')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'stock' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            <button onClick={() => setTab('stock')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'stock' ? 'bg-blue-600 text-white shadow-sm dark:shadow-none' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700'}`}>
               🏠 Mon stock <span className="ml-1.5 text-xs opacity-70">{stockItems.length}</span>
             </button>
           </div>
@@ -338,14 +338,14 @@ export function StockManager() {
           {/* ── TAB: EN TRANSIT ── */}
           {tab === 'transit' && (
             pending.length === 0 ? (
-              <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
+              <div className="bg-white dark:bg-gray-850 rounded-2xl p-16 text-center shadow-sm dark:shadow-none">
                 <CheckCircle size={48} className="text-emerald-300 mx-auto mb-4" />
-                <p className="text-lg font-semibold text-gray-700">Aucune commande en cours</p>
+                <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700">Aucune commande en cours</p>
               </div>
             ) : (
               <div className="flex gap-4 items-start">
                 {/* Left list */}
-                <div className="w-96 flex-shrink-0 bg-white rounded-2xl shadow-sm p-2 flex flex-col gap-1">
+                <div className="w-96 flex-shrink-0 bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none p-2 flex flex-col gap-1">
                   {pending.map((order) => {
                     const st  = (order.delivery_status ?? 'pending') as keyof typeof STATUS;
                     const cfg = STATUS[st];
@@ -361,20 +361,20 @@ export function StockManager() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1">
-                              <p className="text-sm font-semibold text-gray-900 truncate">{order.supplier_name}</p>
-                              <ChevronRight size={14} className={`flex-shrink-0 transition-colors ${isActive ? 'text-blue-400' : 'text-gray-300'}`} />
+                              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{order.supplier_name}</p>
+                              <ChevronRight size={14} className={`flex-shrink-0 transition-colors ${isActive ? 'text-blue-400' : 'text-gray-300 dark:text-gray-700'}`} />
                             </div>
                             <div className="flex items-center justify-between mt-0.5">
-                              <p className="text-xs text-gray-400">{qty} unités</p>
+                              <p className="text-xs text-gray-400 dark:text-gray-400">{qty} unités</p>
                               {dl !== null ? (
-                                <p className={`text-xs jb font-medium ${dl < 0 && st !== 'available' && st !== 'delivered' ? 'text-red-400' : dl === 0 && st !== 'available' ? 'text-emerald-500' : 'text-gray-400'}`}>
+                                <p className={`text-xs jb font-medium ${dl < 0 && st !== 'available' && st !== 'delivered' ? 'text-red-400' : dl === 0 && st !== 'available' ? 'text-emerald-500' : 'text-gray-400 dark:text-gray-400'}`}>
                                   {dl < 0 && st !== 'available' && st !== 'delivered' ? `${Math.abs(dl)}j retard` : dl === 0 && st !== 'available' ? 'Auj.' : st === 'available' ? 'Au relais' : `J-${dl}`}
                                 </p>
-                              ) : <p className="text-xs text-gray-300">{st === 'available' ? 'Au relais' : '—'}</p>}
+                              ) : <p className="text-xs text-gray-300 dark:text-gray-700">{st === 'available' ? 'Au relais' : '—'}</p>}
                             </div>
                           </div>
                         </div>
-                        <div className="mt-2 h-0.5 rounded-full overflow-hidden bg-gray-100">
+                        <div className="mt-2 h-0.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
                           <div className="h-full rounded-full transition-all" style={{background:cfg.color, width: st==='delivered'?'100%':st==='available'?'75%':'40%'}} />
                         </div>
                       </div>
@@ -390,15 +390,15 @@ export function StockManager() {
                   const dl  = selectedOrder.expected_delivery_date ? daysLeft(selectedOrder.expected_delivery_date) : null;
                   return (
                     <div key={selectedOrder.id} className="flex-1 detail-panel space-y-3">
-                      <div className="bg-white rounded-2xl shadow-sm p-5" style={{borderTop:`3px solid #3b82f6`}}>
+                      <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none p-5" style={{borderTop:`3px solid #3b82f6`}}>
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
-                            <h2 className="text-xl font-bold text-gray-900">{selectedOrder.supplier_name}</h2>
-                            <p className="text-sm text-gray-400 mt-0.5">Commandé le {fmtLong(selectedOrder.created_at)}</p>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{selectedOrder.supplier_name}</h2>
+                            <p className="text-sm text-gray-400 dark:text-gray-400 mt-0.5">Commandé le {fmtLong(selectedOrder.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            {selectedOrder.delivery_type==='pickup' ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50"><MapPin size={11}/>Point relais</span>
-                              : selectedOrder.delivery_type==='home' ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 bg-gray-50"><Home size={11}/>Domicile</span> : null}
+                            {selectedOrder.delivery_type==='pickup' ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 dark:bg-blue-950"><MapPin size={11}/>Point relais</span>
+                              : selectedOrder.delivery_type==='home' ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900"><Home size={11}/>Domicile</span> : null}
                             <span className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{color:cfg.color,background:cfg.bg}}>{cfg.label}</span>
                             {selectedOrder.tracking_link && (
                               <a href={selectedOrder.tracking_link} target="_blank" rel="noopener noreferrer"
@@ -417,39 +417,39 @@ export function StockManager() {
                             </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-50 flex-wrap">
-                          <div className="flex items-center gap-1.5 text-sm text-gray-500"><Box size={14} className="text-gray-300"/><span><strong className="text-gray-800">{qty}</strong> unités</span></div>
-                          <div className="flex items-center gap-1.5 text-sm text-gray-500"><Package size={14} className="text-gray-300"/><span><strong className="text-gray-800">{selectedOrder.items.length}</strong> articles</span></div>
+                        <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-50 dark:border-gray-700 flex-wrap">
+                          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"><Box size={14} className="text-gray-300 dark:text-gray-700"/><span><strong className="text-gray-800 dark:text-gray-200">{qty}</strong> unités</span></div>
+                          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"><Package size={14} className="text-gray-300 dark:text-gray-700"/><span><strong className="text-gray-800 dark:text-gray-200">{selectedOrder.items.length}</strong> articles</span></div>
                           {selectedOrder.expected_delivery_date && (
-                            <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                              <Clock size={14} className="text-gray-300"/>
-                              <span>Livraison <strong className={dl!==null&&dl<=0?'text-emerald-600':'text-gray-800'}>
+                            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+                              <Clock size={14} className="text-gray-300 dark:text-gray-700"/>
+                              <span>Livraison <strong className={dl!==null&&dl<=0?'text-emerald-600':'text-gray-800 dark:text-gray-200'}>
                                 {dl===0?"aujourd'hui":dl===1?'demain':fmtShort(selectedOrder.expected_delivery_date)}
                               </strong></span>
                             </div>
                           )}
                           <div className="ml-auto text-right">
-                            <p className="text-xs text-gray-400">Total</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-400">Total</p>
                             <p className="text-2xl font-bold jb text-blue-600">{selectedOrder.total_price.toFixed(2)} €</p>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                        <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Articles</p>
-                          <p className="text-xs text-gray-300 jb">{selectedOrder.items.length} lignes</p>
+                      <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
+                        <div className="px-5 py-3 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between">
+                          <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide">Articles</p>
+                          <p className="text-xs text-gray-300 dark:text-gray-700 jb">{selectedOrder.items.length} lignes</p>
                         </div>
                         <div className="p-3 space-y-0.5">
                           {selectedOrder.items.map((item, idx) => {
                             const line = (item.quantity*(item.price_ttc??item.pricePerUnit)).toFixed(2);
                             const unit = (item.price_ttc??item.pricePerUnit).toFixed(2);
                             return (
-                              <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors">
+                              <div key={idx} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
                                 <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white jb" style={{background:"linear-gradient(135deg,#3b82f6,#60a5fa)"}}>{item.quantity}</div>
-                                <span className="flex-1 text-sm text-gray-700 truncate">{item.name}</span>
+                                <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-700 truncate">{item.name}</span>
                                 <div className="flex items-center gap-3 flex-shrink-0">
-                                  {item.quantity>1&&<span className="text-xs text-gray-300 jb hidden sm:inline">{unit}×{item.quantity}</span>}
-                                  <span className="text-sm font-semibold text-gray-800 jb w-16 text-right">{line} €</span>
+                                  {item.quantity>1&&<span className="text-xs text-gray-300 dark:text-gray-700 jb hidden sm:inline">{unit}×{item.quantity}</span>}
+                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 jb w-16 text-right">{line} €</span>
                                 </div>
                               </div>
                             );
@@ -470,20 +470,20 @@ export function StockManager() {
               {/* Search + sort bar */}
               <div className="flex gap-2 flex-wrap">
                 <div className="relative flex-1 min-w-48">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
                   <input
                     value={search} onChange={e => setSearch(e.target.value)}
                     placeholder="Rechercher un produit..."
-                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm"
+                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 shadow-sm dark:shadow-none"
                   />
                   {search && (
-                    <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:text-gray-400">
                       <X size={13} />
                     </button>
                   )}
                 </div>
                 <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
-                  className="px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-gray-600 cursor-pointer">
+                  className="px-3 py-2.5 text-sm bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 shadow-sm dark:shadow-none text-gray-600 dark:text-gray-400 dark:text-gray-400 cursor-pointer">
                   <option value="name">Nom (A→Z)</option>
                   <option value="qty_desc">Unités ↓</option>
                   <option value="qty_asc">Unités ↑</option>
@@ -493,7 +493,7 @@ export function StockManager() {
                   <option value="value_asc">Valeur totale ↑</option>
                 </select>
                 <button onClick={() => setShowAdd(v => !v)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition-all ${showAdd ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm dark:shadow-none transition-all ${showAdd ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
                   <Plus size={15} /> Ajouter
                 </button>
               </div>
@@ -508,32 +508,32 @@ export function StockManager() {
 
               {/* Stock list */}
               {loadingStock ? (
-                <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+                <div className="bg-white dark:bg-gray-850 rounded-2xl p-12 text-center shadow-sm dark:shadow-none">
                   <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto" />
                 </div>
               ) : stockItems.length === 0 ? (
-                <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="bg-white dark:bg-gray-850 rounded-2xl p-16 text-center shadow-sm dark:shadow-none">
+                  <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Package size={32} className="text-blue-300" />
                   </div>
-                  <p className="text-lg font-semibold text-gray-700">Stock vide</p>
-                  <p className="text-sm text-gray-400 mt-1">Ajoutez des articles manuellement ou importez depuis une commande livrée</p>
+                  <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700">Stock vide</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">Ajoutez des articles manuellement ou importez depuis une commande livrée</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
+                <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
+                  <div className="px-5 py-3 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Références en stock</p>
+                      <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide">Références en stock</p>
                       {search && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 font-medium">{filteredStock.length} résultat{filteredStock.length !== 1 ? 's' : ''}</span>}
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs text-gray-400 jb">{stockUnits} unités</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-400 jb">{stockUnits} unités</span>
                       <span className="text-sm font-bold jb text-blue-600">{stockValue.toFixed(2)} €</span>
                     </div>
                   </div>
                   {filteredStock.length === 0 ? (
                     <div className="p-12 text-center">
-                      <p className="text-sm text-gray-400">Aucun résultat pour "<span className="font-medium text-gray-600">{search}</span>"</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-400">Aucun résultat pour "<span className="font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">{search}</span>"</p>
                     </div>
                   ) : (
                     <div className="p-3 space-y-0.5">
@@ -554,19 +554,19 @@ export function StockManager() {
       {/* Confirm delete order modal */}
       {confirmDeleteOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.5)'}}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+          <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
                 <Trash2 size={18} className="text-red-500" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Supprimer la commande ?</p>
-                <p className="text-xs text-gray-400 mt-0.5">Cette action est irréversible</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">Supprimer la commande ?</p>
+                <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">Cette action est irréversible</p>
               </div>
             </div>
             <div className="flex gap-2 mt-6">
               <button onClick={() => setConfirmDeleteOrder(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
                 Annuler
               </button>
               <button onClick={() => handleDeleteOrder(confirmDeleteOrder)}
