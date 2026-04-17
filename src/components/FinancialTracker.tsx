@@ -1,3 +1,4 @@
+import { useTheme } from '../context/ThemeContext';
 import { useState, useMemo } from 'react';
 import {
   Plus, TrendingUp, TrendingDown, DollarSign, Edit2, Trash2,
