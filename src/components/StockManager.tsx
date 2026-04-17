@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
 import { Package, Truck, MapPin, Home, Clock, ExternalLink, CheckCircle, ChevronRight, Box, Plus, Trash2, Edit2, Check, X, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { Order } from '../hooks/useOrders';
 import { useStock } from '../hooks/useStock';
@@ -195,6 +196,7 @@ function ImportModal({ order, onImport, onClose }: {
 
 // ── Main component ───────────────────────────────────────────
 export function StockManager() {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -296,7 +298,7 @@ export function StockManager() {
         .stock-item{animation:slideUp .2s ease both}
       `}</style>
 
-      <div className="sm-page min-h-screen" style={{background:'#f4f6fb'}}>
+      <div className="sm-page min-h-screen" style={{ background: theme === 'dark' ? '#0f172a' : '#f4f6fb' }}>
         <div className="max-w-6xl mx-auto px-4 py-8">
 
           {/* Header */}
