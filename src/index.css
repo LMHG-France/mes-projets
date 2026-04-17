@@ -65,6 +65,23 @@ html.dark textarea::placeholder {
   color: #475569;
 }
 
+
+/* ── Force dark app background ── */
+html.dark body {
+  background-color: #0f172a !important;
+  background-image: none !important;
+}
+html.dark .bg-gradient-to-br,
+html.dark [class*="from-blue-50"],
+html.dark [class*="from-indigo-50"],
+html.dark [class*="to-indigo-100"] {
+  background-color: #0f172a !important;
+  background-image: none !important;
+}
+html.dark main {
+  background-color: #0f172a !important;
+}
+
 /* ── Mobile improvements ── */
 @media (max-width: 768px) {
   /* Larger touch targets */
