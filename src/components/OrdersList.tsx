@@ -1,23 +1,19 @@
 import { useState, useMemo } from 'react';
-import { ExternalLink, Trash2, Edit2, Package, Eye, X, Search, Filter, Copy } from 'lucide-react';
+import { ExternalLink, Trash2, Edit2, Package, Eye, X, Search, Filter } from 'lucide-react';
 import { Order } from '../hooks/useOrders';
 
 interface OrdersListProps {
   orders: Order[];
   onEdit: (order: Order) => void;
   onDelete: (orderId: string) => Promise<void>;
-  onDuplicate: (order: Order, times: number) => Promise<void>;
   isLoading?: boolean;
   onFilteredOrdersChange?: (filtered: Order[]) => void;
 }
 
-export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, onFilteredOrdersChange }: OrdersListProps) {
+export function OrdersList({ orders, onEdit, onDelete, isLoading, onFilteredOrdersChange }: OrdersListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [duplicateOrder, setDuplicateOrder] = useState<Order | null>(null);
-  const [duplicateTimes, setDuplicateTimes] = useState(2);
-  const [duplicating, setDuplicating] = useState(false);
   const [filterDate, setFilterDate] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'supplier'>('date');
 
@@ -104,9 +100,9 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
   if (orders.length === 0) {
     return (
       <div className="text-center py-12">
-        <Package size={48} className="mx-auto text-gray-300 mb-4" />
-        <p className="text-gray-500 text-lg">Aucune commande pour le moment</p>
-        <p className="text-gray-400 text-sm">Commencez en cliquant sur "Ajouter une commande"</p>
+        <Package size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
+        <p className="text-gray-500 dark:text-gray-500 text-lg">Aucune commande pour le moment</p>
+        <p className="text-gray-400 dark:text-gray-600 text-sm">Commencez en cliquant sur "Ajouter une commande"</p>
       </div>
     );
   }
@@ -116,25 +112,25 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
       <div className="mb-6 space-y-4">
         {/* Barre de recherche */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-600" size={20} />
           <input
             type="text"
             placeholder="Rechercher par fournisseur, produit ou prix..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         {/* Filtres */}
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Période:</span>
+            <Filter size={18} className="text-gray-500 dark:text-gray-500" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-700">Période:</span>
             <select
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value as any)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">Toutes</option>
               <option value="today">Aujourd'hui</option>
@@ -144,11 +140,11 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Trier par:</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-700">Trier par:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="date">Date (récent)</option>
               <option value="price">Prix (élevé)</option>
@@ -162,7 +158,7 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
                 setSearchQuery('');
                 setFilterDate('all');
               }}
-              className="ml-auto px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              className="ml-auto px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600 hover:text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded-lg transition-colors"
             >
               Réinitialiser
             </button>
@@ -170,30 +166,30 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
         </div>
 
         {/* Résultats */}
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600">
           {filteredAndSortedOrders.length} commande{filteredAndSortedOrders.length !== 1 ? 's' : ''} trouvée{filteredAndSortedOrders.length !== 1 ? 's' : ''}
         </div>
       </div>
 
       {filteredAndSortedOrders.length === 0 ? (
         <div className="text-center py-12">
-          <Package size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500 text-lg">Aucune commande trouvée</p>
-          <p className="text-gray-400 text-sm">Essayez de modifier vos critères de recherche</p>
+          <Package size={48} className="mx-auto text-gray-300 dark:text-gray-700 mb-4" />
+          <p className="text-gray-500 dark:text-gray-500 text-lg">Aucune commande trouvée</p>
+          <p className="text-gray-400 dark:text-gray-600 text-sm">Essayez de modifier vos critères de recherche</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAndSortedOrders.map((order) => (
           <div
             key={order.id}
-            className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col aspect-square"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg dark:shadow-none transition-shadow flex flex-col aspect-square"
           >
             <div className="flex-1 flex flex-col p-4">
               <div className="mb-3">
-                <h3 className="text-base font-semibold text-gray-900 truncate">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {order.supplier_name}
                 </h3>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-500">
                   {formatDate(order.created_at)}
                 </p>
               </div>
@@ -202,7 +198,7 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
                 <p className="text-2xl font-bold text-blue-600">
                   {order.total_price.toFixed(2)} €
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-500">
                   {order.items.length} article{order.items.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -210,12 +206,12 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
               <div className="flex-1 mb-3 overflow-hidden">
                 <div className="space-y-1">
                   {order.items.slice(0, 2).map((item, idx) => (
-                    <div key={idx} className="text-xs text-gray-600 truncate">
+                    <div key={idx} className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-600 truncate">
                       {item.quantity}x {item.name}
                     </div>
                   ))}
                   {order.items.length > 2 && (
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 dark:text-gray-600">
                       +{order.items.length - 2} autre{order.items.length - 2 !== 1 ? 's' : ''}
                     </div>
                   )}
@@ -232,7 +228,7 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
                 </button>
                 <button
                   onClick={() => onEdit(order)}
-                  className="flex items-center justify-center gap-1 px-2 py-2 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  className="flex items-center justify-center gap-1 px-2 py-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-700"
                   disabled={isLoading || deletingId === order.id}
                 >
                   <Edit2 size={14} />
@@ -247,13 +243,13 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
 
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedOrder(null)}>
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-gray-200 rounded-t-2xl overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 rounded-t-2xl overflow-hidden">
               <div className="p-6 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Détails de la commande</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Détails de la commande</h2>
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded-lg transition-colors"
                 >
                   <X size={24} />
                 </button>
@@ -264,15 +260,15 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
               <div className="mb-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                       {selectedOrder.supplier_name}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
                       {formatDate(selectedOrder.created_at)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500 mb-1">Prix total</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mb-1">Prix total</p>
                     <p className="text-3xl font-bold text-blue-600">
                       {selectedOrder.total_price.toFixed(2)} €
                     </p>
@@ -281,9 +277,9 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
               </div>
 
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-3 font-medium">Articles:</p>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center text-xs font-semibold text-gray-500 uppercase tracking-wide pb-2 mb-2 border-b border-gray-200">
+                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-3 font-medium">Articles:</p>
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                  <div className="flex items-center text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
                     <div className="w-20">Quantité</div>
                     <div className="flex-1">Nom du produit</div>
                     <div className="w-32 text-right">Prix Unitaire TTC</div>
@@ -292,19 +288,19 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex items-center text-sm">
                         <div className="w-20">
-                          <span className="bg-white px-2 py-1 rounded text-xs font-medium text-gray-600">
+                          <span className="bg-white dark:bg-gray-800 px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600">
                             {item.quantity}x
                           </span>
                         </div>
                         <div className="flex-1">
-                          <div className="text-gray-800">{item.name}</div>
+                          <div className="text-gray-800 dark:text-gray-200">{item.name}</div>
                           {item.price_ht && item.price_ttc && (
-                            <div className="text-xs text-gray-500 mt-0.5">
+                            <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
                               HT: {item.price_ht.toFixed(2)} € | TTC: {item.price_ttc.toFixed(2)} €
                             </div>
                           )}
                         </div>
-                        <div className="w-32 text-right font-semibold text-gray-900">
+                        <div className="w-32 text-right font-semibold text-gray-900 dark:text-gray-100">
                           {(item.price_ttc || item.pricePerUnit).toFixed(2)} €
                         </div>
                       </div>
@@ -314,25 +310,21 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
               </div>
 
               <div className="mb-6 flex flex-wrap items-center gap-4">
-                {selectedOrder.tracking_link ? (
+                {selectedOrder.tracking_link && (
                   <a
                     href={selectedOrder.tracking_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 font-medium rounded-lg transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-50 dark:bg-blue-950 border border-blue-200 text-blue-700 hover:bg-blue-100 font-medium rounded-lg transition-colors"
                   >
                     <ExternalLink size={16} />
                     Suivre la commande
                   </a>
-                ) : (
-                  <span className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-orange-50 border border-orange-200 text-orange-700">
-                    ⚠️ Lien de suivi manquant
-                  </span>
                 )}
                 <div className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg ${
                   selectedOrder.expected_delivery_date
-                    ? 'bg-green-50 border border-green-200 text-green-700'
-                    : 'bg-gray-50 border border-gray-200 text-gray-500'
+                    ? 'bg-green-50 dark:bg-green-950 border border-green-200 text-green-700'
+                    : 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-500'
                 }`}>
                   <Package size={16} />
                   <span>
@@ -348,21 +340,13 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => { setDuplicateOrder(selectedOrder); setDuplicateTimes(2); }}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100"
-                  disabled={isLoading || deletingId === selectedOrder.id}
-                >
-                  <Copy size={16} />
-                  Dupliquer
-                </button>
+              <div className="flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <button
                   onClick={() => {
                     onEdit(selectedOrder);
                     setSelectedOrder(null);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-700"
                   disabled={isLoading || deletingId === selectedOrder.id}
                 >
                   <Edit2 size={16} />
@@ -380,50 +364,6 @@ export function OrdersList({ orders, onEdit, onDelete, onDuplicate, isLoading, o
                   Supprimer
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Modal duplication */}
-      {duplicateOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-            <h3 className="text-base font-bold text-gray-900 mb-1">Dupliquer la commande</h3>
-            <p className="text-sm text-gray-500 mb-5">
-              <span className="font-medium text-gray-700">{duplicateOrder.supplier_name}</span> — {duplicateOrder.total_price.toFixed(2)} €
-            </p>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de copies</label>
-            <div className="flex items-center gap-3 mb-6">
-              <button
-                onClick={() => setDuplicateTimes(t => Math.max(1, t - 1))}
-                className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center"
-              >−</button>
-              <span className="text-2xl font-bold text-gray-900 w-8 text-center">{duplicateTimes}</span>
-              <button
-                onClick={() => setDuplicateTimes(t => Math.min(20, t + 1))}
-                className="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 flex items-center justify-center"
-              >+</button>
-              <span className="text-sm text-gray-400 ml-1">commande{duplicateTimes > 1 ? 's' : ''} créée{duplicateTimes > 1 ? 's' : ''}</span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setDuplicateOrder(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50"
-              >Annuler</button>
-              <button
-                disabled={duplicating}
-                onClick={async () => {
-                  setDuplicating(true);
-                  try {
-                    await onDuplicate(duplicateOrder, duplicateTimes);
-                    setDuplicateOrder(null);
-                    setSelectedOrder(null);
-                  } finally { setDuplicating(false); }
-                }}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {duplicating ? 'Création...' : <><Copy size={14} /> Créer {duplicateTimes}x</>}
-              </button>
             </div>
           </div>
         </div>
