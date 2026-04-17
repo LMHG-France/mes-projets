@@ -1,8 +1,9 @@
+import { useTheme } from '../context/ThemeContext';
 import { TrendingUp } from 'lucide-react';
 
 export function ProfitManager() {
   return (
-    <div className="py-8 px-4 lg:px-8">
+    <div className="py-8 px-4 lg:px-8 min-h-screen" style={{ background: theme === 'dark' ? '#0f172a' : '#f4f6fb' }}>
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <TrendingUp size={32} className="text-green-600" />
@@ -42,4 +43,5 @@ export function ProfitManager() {
       </div>
     </div>
   );
+  const { theme } = useTheme();
 }
