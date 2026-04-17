@@ -5,6 +5,7 @@ import {
   Search, Truck, RefreshCw, CalendarClock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrders, Order, DeliveryStatus } from '../hooks/useOrders';
 import { useStock } from '../hooks/useStock';
@@ -196,6 +197,7 @@ function ImportModal({ order, onImport, onClose }: { order: Order; onImport: (it
 }
 
 export function InventairePage() {
+  const { theme } = useTheme();
   const { user }  = useAuth();
   const { orders: allDbOrders, loading: loadingOrders, addOrder, deleteOrder, updateOrder, updateDeliveryStatus, fetchOrders } = useOrders();
   const { items: stockItems, loading: loadingStock, addItem, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
@@ -376,7 +378,7 @@ export function InventairePage() {
         .stock-row{animation:slideUp .2s ease both}
       `}</style>
 
-      <div className="inv-page min-h-screen" style={{ background: '#f4f6fb' }}>
+      <div className="inv-page min-h-screen" style={{ background: theme === 'dark' ? '#0f172a' : '#f4f6fb' }}>
         <div className="max-w-6xl mx-auto px-4 py-8">
 
           <div className="flex items-center justify-between mb-6">
