@@ -208,7 +208,8 @@ export function InventairePage() {
         .not('tracking_link', 'is', null)
         .neq('tracking_link', '')
         .neq('delivery_status', 'collected')
-        .neq('delivery_status', 'delivered');
+        .neq('delivery_status', 'delivered')
+        .neq('delivery_status', 'available');
       for (const o of (ordersToRefresh || [])) {
         try {
           const res = await fetch(`${url}/functions/v1/extract_delivery_date`, {
