@@ -47,6 +47,24 @@ html.dark ::-webkit-scrollbar { width: 6px; height: 6px; }
 html.dark ::-webkit-scrollbar-track { background: var(--bg-muted); }
 html.dark ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+
+/* Custom gray shades for fine-tuned dark mode */
+html.dark .dark\:bg-gray-850 { background-color: #1a2535 !important; }
+html.dark .dark\:bg-gray-750 { background-color: #2a3a4f !important; }
+
+/* Ensure inputs are readable in dark mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
+  background-color: #243347;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #475569;
+}
+
 /* ── Mobile improvements ── */
 @media (max-width: 768px) {
   /* Larger touch targets */
