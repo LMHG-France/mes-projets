@@ -1,3 +1,4 @@
+import { useTheme } from '../context/ThemeContext';
 import { useMemo, useState } from 'react';
 import { Search, X, Package, Building2, Calendar, TrendingUp, ShoppingBag } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
@@ -13,6 +14,7 @@ interface HistoryLine {
 }
 
 export function HistoriquePage() {
+  const { theme } = useTheme();
   const { orders, loading } = useOrders();
   const [search, setSearch] = useState('');
 
@@ -59,7 +61,7 @@ export function HistoriquePage() {
   const fmtPrice = (p: number) => p.toFixed(2) + ' €';
 
   return (
-    <div className="py-8 px-4 lg:px-8 min-h-screen" style={{ background: '#f4f6fb' }}>
+    <div className="py-8 px-4 lg:px-8 min-h-screen" style={{ background: theme === 'dark' ? '#0f172a' : '#f4f6fb' }}>
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
