@@ -237,14 +237,14 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-850 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-850">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             {initialData ? 'Modifier la commande' : 'Ajouter une commande'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700">
+          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700">
             <X size={24} />
           </button>
         </div>
@@ -267,10 +267,10 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
               </label>
               <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
                 className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg transition-all ${
-                  isDragging ? 'border-blue-600 bg-blue-100' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-400 hover:bg-blue-50 dark:bg-blue-950'
+                  isDragging ? 'border-blue-600 bg-blue-100' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-850 hover:border-blue-400 hover:bg-blue-50 dark:bg-blue-950'
                 } ${extracting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                <Upload size={18} className={isDragging ? 'text-blue-600' : 'text-gray-400 dark:text-gray-600'} />
-                <span className={`text-sm font-medium ${isDragging ? 'text-blue-600' : 'text-gray-600 dark:text-gray-400 dark:text-gray-600'}`}>
+                <Upload size={18} className={isDragging ? 'text-blue-600' : 'text-gray-400 dark:text-gray-400'} />
+                <span className={`text-sm font-medium ${isDragging ? 'text-blue-600' : 'text-gray-600 dark:text-gray-400 dark:text-gray-400'}`}>
                   {isDragging ? 'Déposer ici' : 'Glisser-déposer'}
                 </span>
               </div>
@@ -285,7 +285,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
           <div className="relative">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300 dark:border-gray-600" /></div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-500">Ou remplissez manuellement</span>
+              <span className="px-2 bg-white dark:bg-gray-850 text-gray-500 dark:text-gray-400">Ou remplissez manuellement</span>
             </div>
           </div>
 
@@ -328,7 +328,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
                       placeholder="Prix TTC"
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
                     {item.price_ht && item.price_ttc && (
-                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">HT: {item.price_ht.toFixed(2)} €</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">HT: {item.price_ht.toFixed(2)} €</div>
                     )}
                   </div>
                   <div className="w-28 text-right">
@@ -344,7 +344,7 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
               ))}
             </div>
             {items.length === 0 && (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 Aucun article. Cliquez sur "Ajouter un article" pour commencer.
               </div>
             )}
@@ -356,14 +356,14 @@ export function OrderForm({ onSubmit, onClose, initialData, isLoading }: OrderFo
                     <input type="number" value={discountInput} onChange={e => setDiscountInput(e.target.value)}
                       placeholder="Ex: 15" step="0.1" min="0" max="99"
                       className="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
-                    <Percent size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600" />
+                    <Percent size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
                   </div>
                   <button type="button" onClick={applyDiscount} disabled={!discountInput}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                     Appliquer
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 dark:text-gray-600">
+                <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 dark:text-gray-400">
                   Cette réduction sera appliquée sur le prix unitaire de tous les articles
                 </p>
               </div>
