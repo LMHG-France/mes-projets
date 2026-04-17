@@ -140,6 +140,7 @@ function CustomTooltip({ active, payload, label, isAll }: any) {
 
 // ── Composant principal ──────────────────────────────────────
 export function FinancialTracker() {
+  const { theme } = useTheme();
   const { financials, loading, addFinancial, updateFinancial, deleteFinancial } = useFinancials();
   const [showForm, setShowForm]                 = useState(false);
   const [editingFinancial, setEditingFinancial] = useState<MonthlyFinancial | null>(null);
@@ -216,7 +217,7 @@ export function FinancialTracker() {
   };
 
   return (
-    <div className="py-8 px-4 lg:px-8">
+    <div className="py-8 px-4 lg:px-8 min-h-screen" style={{ background: theme === 'dark' ? '#0f172a' : '#f4f6fb' }}>
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* En-tête */}
