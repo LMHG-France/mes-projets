@@ -80,7 +80,7 @@ function useCronStatus() {
 }
 
 const STATUS_CONFIG = {
-  pending:   { label: 'En attente',    color: 'text-gray-500 dark:text-gray-500',   bg: 'bg-gray-100 dark:bg-gray-700',   border: 'border-gray-200 dark:border-gray-700' },
+  pending:   { label: 'En attente',    color: 'text-gray-500 dark:text-gray-400',   bg: 'bg-gray-100 dark:bg-gray-700',   border: 'border-gray-200 dark:border-gray-700' },
   delivered: { label: 'Livré',         color: 'text-green-700',  bg: 'bg-green-100',  border: 'border-green-300' },
   available: { label: 'À disposition', color: 'text-blue-700',   bg: 'bg-blue-100',   border: 'border-blue-300' },
   collected: { label: 'Récupéré',      color: 'text-purple-700', bg: 'bg-purple-100', border: 'border-purple-300' },
@@ -90,12 +90,12 @@ function ConfirmModal({ message, onConfirm, onCancel, extraButton = null, confir
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-none p-6 w-full max-w-sm mx-4">
+      <div className="relative bg-white dark:bg-gray-850 rounded-2xl shadow-2xl dark:shadow-none p-6 w-full max-w-sm mx-4">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-blue-100 p-2.5 rounded-xl"><CheckCheck size={20} className="text-blue-600" /></div>
           <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Confirmation</h3>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-6">{message}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mb-6">{message}</p>
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">Annuler</button>
           {extraButton}
@@ -162,7 +162,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
   const upcomingCount = deliveries.filter(d => d.diffDays > 0 && d.order.delivery_status !== 'delivered' && d.order.delivery_status !== 'collected').length;
 
   return (
-    <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-none overflow-hidden">
+    <div className="mb-6 bg-white dark:bg-gray-850 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-none overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
         <Truck size={18} className="text-white" />
         <span className="text-white font-semibold text-sm">Livraisons à venir</span>
@@ -177,7 +177,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
               onClick={(e) => { e.stopPropagation(); onRefresh(); }}
               disabled={refreshing}
               title="Rafraîchir maintenant"
-              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-gray-800/10 hover:bg-white dark:bg-gray-800/20 transition-colors disabled:opacity-50 text-white"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white dark:bg-gray-850/10 hover:bg-white dark:bg-gray-850/20 transition-colors disabled:opacity-50 text-white"
             >
               <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
               <span className="hidden sm:inline">{refreshing ? 'Refresh...' : 'Refresh'}</span>
@@ -204,22 +204,22 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${urgency.dot}`} />
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 dark:text-gray-600 line-through' : 'text-gray-800 dark:text-gray-200'}`}>{order.supplier_name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
+                  <p className={`text-sm font-semibold truncate ${isDone ? 'text-gray-400 dark:text-gray-400 line-through' : 'text-gray-800 dark:text-gray-200'}`}>{order.supplier_name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                     {firstItem ? `${firstItem.quantity}x ${firstItem.name}` : '-'}
                     {itemCount > 1 && ` +${itemCount - 1} autre${itemCount > 2 ? 's' : ''}`}
                   </p>
                 </div>
                 <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
-                  <CalendarClock size={13} className="text-gray-400 dark:text-gray-600" />
-                  <span className="text-xs text-gray-500 dark:text-gray-500">{date ? fmt(date) : '—'}</span>
+                  <CalendarClock size={13} className="text-gray-400 dark:text-gray-400" />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{date ? fmt(date) : '—'}</span>
                 </div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-500 flex-shrink-0">{urgency.text}</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex-shrink-0">{urgency.text}</span>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {status === 'pending' && !noTracking && (
                     <span className={order.delivery_type === 'pickup'
                       ? 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-blue-200 text-blue-500 bg-blue-50 dark:bg-blue-950'
-                      : 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-gray-900'
+                      : 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900'
                     }>
                       {order.delivery_type === 'pickup'
                         ? <><MapPin size={11} /><span className="hidden sm:inline">Point relais</span></>
@@ -242,7 +242,7 @@ function DeliveryBanner({ orders, onStatusChange, onDelete, cronStatus, onRefres
                   )}
                   {isDone && (
                     <button onClick={(e) => { e.stopPropagation(); setDismissOrder(order.id); }}
-                      className="text-xs text-gray-400 dark:text-gray-600 hover:text-red-500 px-1 transition-colors" title="Retirer">✕</button>
+                      className="text-xs text-gray-400 dark:text-gray-400 hover:text-red-500 px-1 transition-colors" title="Retirer">✕</button>
                   )}
                 </div>
               </div>
@@ -296,7 +296,7 @@ export function OrdersManager() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Mes Commandes</h1>
-            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-600 mt-1">Gérez toutes vos commandes en un seul endroit</p>
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-400 mt-1">Gérez toutes vos commandes en un seul endroit</p>
           </div>
           <button onClick={() => { setEditingOrder(null); setShowForm(true); }}
             className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
@@ -304,22 +304,22 @@ export function OrdersManager() {
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-none p-6">
+          <div className="bg-white dark:bg-gray-850 rounded-lg shadow-md dark:shadow-none p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-blue-100 p-3 rounded-lg"><Euro className="text-blue-600" size={24} /></div>
-              <div><p className="text-sm text-gray-500 dark:text-gray-500 font-medium">Valeur totale</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalValue.toFixed(2)} €</p></div>
+              <div><p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Valeur totale</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalValue.toFixed(2)} €</p></div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-none p-6">
+          <div className="bg-white dark:bg-gray-850 rounded-lg shadow-md dark:shadow-none p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-green-100 p-3 rounded-lg"><Package className="text-green-600" size={24} /></div>
-              <div><p className="text-sm text-gray-500 dark:text-gray-500 font-medium">Unités totales</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalUnits}</p></div>
+              <div><p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Unités totales</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalUnits}</p></div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-none p-6">
+          <div className="bg-white dark:bg-gray-850 rounded-lg shadow-md dark:shadow-none p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-orange-100 p-3 rounded-lg"><ShoppingCart className="text-orange-600" size={24} /></div>
-              <div><p className="text-sm text-gray-500 dark:text-gray-500 font-medium">Nombre de commandes</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalOrders}</p></div>
+              <div><p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Nombre de commandes</p><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalOrders}</p></div>
             </div>
           </div>
         </div>
@@ -329,10 +329,10 @@ export function OrdersManager() {
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400 dark:text-gray-600">Chargement des commandes...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400 dark:text-gray-400">Chargement des commandes...</p>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-none p-6">
+          <div className="bg-white dark:bg-gray-850 rounded-lg shadow-md dark:shadow-none p-6">
             <OrdersList orders={orders} onEdit={handleEditOrder} onDelete={deleteOrder} isLoading={loading} onFilteredOrdersChange={setFilteredOrders} />
           </div>
         )}
