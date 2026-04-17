@@ -72,10 +72,10 @@ function CardModal({ initial, onSave, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-base font-bold text-gray-900">{initial?.id ? 'Modifier la carte' : 'Nouvelle carte fidélité'}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{initial?.id ? 'Modifier la carte' : 'Nouvelle carte fidélité'}</h3>
+          <button onClick={onClose} className="text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600"><X size={18} /></button>
         </div>
         <div className="flex gap-2 mb-4">
           {CARD_COLORS.map(c => (
@@ -87,40 +87,40 @@ function CardModal({ initial, onSave, onClose }: {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Fournisseur *</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-1">Fournisseur *</label>
               <input value={supplierName} onChange={e => setSupplierName(e.target.value)} placeholder="ex: Carrefour"
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Libellé</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-1">Libellé</label>
               <input value={label} onChange={e => setLabel(e.target.value)} placeholder="ex: Carte principale"
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Solde (€)</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-1">Solde (€)</label>
             <input type="number" step="0.01" value={balance} onChange={e => setBalance(e.target.value)} placeholder="0.00"
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-1">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="compte@email.com"
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Mot de passe</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-1">Mot de passe</label>
             <div className="relative">
               <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
-              <button onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              <button onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600">
                 {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Note</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600 mb-1">Note</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Infos supplémentaires..."
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none" />
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none" />
           </div>
         </div>
         {error && (
@@ -129,7 +129,7 @@ function CardModal({ initial, onSave, onClose }: {
           </div>
         )}
         <div className="flex gap-2 mt-5">
-          <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50">Annuler</button>
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">Annuler</button>
           <button onClick={handleSubmit} disabled={saving}
             className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
@@ -149,17 +149,17 @@ function HistoryItem({ item, onToggle, onDelete }: {
 }) {
   const date = new Date(item.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${item.used ? 'bg-gray-50 opacity-60' : 'bg-white border border-gray-100'}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${item.used ? 'bg-gray-50 dark:bg-gray-900 opacity-60' : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700'}`}>
       <button onClick={onToggle}
         className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${item.used ? 'bg-gray-300 border-gray-300' : 'border-gray-300 hover:border-blue-400'}`}>
         {item.used && <Check size={11} className="text-white" />}
       </button>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${item.used ? 'line-through text-gray-400' : 'text-gray-800'}`}>{item.description}</p>
-        <p className="text-xs text-gray-400 mt-0.5">{date}</p>
+        <p className={`text-sm font-medium ${item.used ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-800 dark:text-gray-200'}`}>{item.description}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">{date}</p>
       </div>
       {item.amount !== null && (
-        <span className={`text-sm font-semibold flex-shrink-0 ${item.used ? 'text-gray-400' : 'text-red-500'}`}>
+        <span className={`text-sm font-semibold flex-shrink-0 ${item.used ? 'text-gray-400 dark:text-gray-600' : 'text-red-500'}`}>
           -{item.amount.toFixed(2)} €
         </span>
       )}
@@ -370,9 +370,9 @@ export function AvoirsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Avoirs & Cartes fidélité</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            {cards.length} carte{cards.length > 1 ? 's' : ''} — Total : <span className="font-semibold text-gray-700">{totalBalance.toFixed(2)} €</span>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Avoirs & Cartes fidélité</h1>
+          <p className="text-sm text-gray-400 dark:text-gray-600 mt-0.5">
+            {cards.length} carte{cards.length > 1 ? 's' : ''} — Total : <span className="font-semibold text-gray-700 dark:text-gray-300">{totalBalance.toFixed(2)} €</span>
           </p>
         </div>
         <button onClick={() => { setEditCard(null); setShowModal(true); }}
@@ -382,10 +382,10 @@ export function AvoirsPage() {
       </div>
 
       {cards.length === 0 ? (
-        <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-16 text-center shadow-sm dark:shadow-none">
           <CreditCard size={48} className="text-gray-200 mx-auto mb-4" />
-          <p className="text-gray-500 font-medium">Aucune carte fidélité</p>
-          <p className="text-gray-400 text-sm mt-1">Ajoutez vos cartes pour suivre vos avoirs</p>
+          <p className="text-gray-500 dark:text-gray-500 font-medium">Aucune carte fidélité</p>
+          <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">Ajoutez vos cartes pour suivre vos avoirs</p>
           <button onClick={() => setShowModal(true)}
             className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
             <Plus size={15} />Ajouter une carte
@@ -395,7 +395,7 @@ export function AvoirsPage() {
         <div className="flex gap-5 items-start">
           {/* Left: draggable card list */}
           <div className="w-72 flex-shrink-0 space-y-3">
-            <p className="text-xs text-gray-400 text-center pb-1 flex items-center justify-center gap-1">
+            <p className="text-xs text-gray-400 dark:text-gray-600 text-center pb-1 flex items-center justify-center gap-1">
               <GripVertical size={11} />Glisser pour réorganiser
             </p>
             {cards.map(card => (
@@ -416,17 +416,17 @@ export function AvoirsPage() {
           {selectedCard && (
             <div className="flex-1 space-y-4 min-w-0">
               {/* Card detail */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
                 <div className="h-2 w-full" style={{ background: selectedCard.color }} />
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">{selectedCard.label}</h2>
-                      <p className="text-sm text-gray-400">{selectedCard.supplier_name}</p>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{selectedCard.label}</h2>
+                      <p className="text-sm text-gray-400 dark:text-gray-600">{selectedCard.supplier_name}</p>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => { setEditCard(selectedCard); setShowModal(true); }}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
                         <Edit2 size={11} />Modifier
                       </button>
                       <button onClick={() => setConfirmDelete(selectedCard.id)}
@@ -438,22 +438,22 @@ export function AvoirsPage() {
 
                   {/* Balance */}
                   <div className="rounded-2xl p-5 mb-4" style={{ background: `${selectedCard.color}15` }}>
-                    <p className="text-xs font-medium text-gray-500 mb-1">Solde disponible</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-500 mb-1">Solde disponible</p>
                     {editingBalance ? (
                       <div className="flex items-center gap-2">
                         <input autoFocus type="number" step="0.01" value={newBalance}
                           onChange={e => setNewBalance(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') handleUpdateBalance(); if (e.key === 'Escape') setEditingBalance(false); }}
-                          className="text-2xl font-bold w-36 bg-white border border-gray-200 rounded-xl px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 jb" />
-                        <span className="text-2xl font-bold text-gray-400">€</span>
+                          className="text-2xl font-bold w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 jb" />
+                        <span className="text-2xl font-bold text-gray-400 dark:text-gray-600">€</span>
                         <button onClick={handleUpdateBalance} className="p-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"><Check size={14} /></button>
-                        <button onClick={() => setEditingBalance(false)} className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50"><X size={14} /></button>
+                        <button onClick={() => setEditingBalance(false)} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900"><X size={14} /></button>
                       </div>
                     ) : (
                       <div className="flex items-end gap-3">
                         <p className="text-3xl font-bold jb" style={{ color: selectedCard.color }}>{selectedCard.balance.toFixed(2)} €</p>
                         <button onClick={() => { setNewBalance(String(selectedCard.balance)); setEditingBalance(true); }}
-                          className="mb-1 text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg px-2 py-0.5 hover:bg-gray-50">
+                          className="mb-1 text-xs text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">
                           Modifier
                         </button>
                       </div>
@@ -463,31 +463,31 @@ export function AvoirsPage() {
                   {/* Credentials */}
                   <div className="space-y-3">
                     {selectedCard.email && (
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
                         <div>
-                          <p className="text-xs font-medium text-gray-400 mb-0.5">Email</p>
-                          <p className="text-sm font-medium text-gray-800">{selectedCard.email}</p>
+                          <p className="text-xs font-medium text-gray-400 dark:text-gray-600 mb-0.5">Email</p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{selectedCard.email}</p>
                         </div>
                       </div>
                     )}
                     {selectedCard.password_encrypted && (
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
                         <div className="flex-1">
-                          <p className="text-xs font-medium text-gray-400 mb-0.5">Mot de passe</p>
-                          <p className="text-sm font-medium text-gray-800 font-mono">
+                          <p className="text-xs font-medium text-gray-400 dark:text-gray-600 mb-0.5">Mot de passe</p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 font-mono">
                             {showPwd ? selectedCard.password_encrypted : '••••••••'}
                           </p>
                         </div>
                         <button onClick={() => setShowPwd(v => !v)}
-                          className="ml-3 p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                          className="ml-3 p-2 rounded-lg text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 transition-colors">
                           {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>
                       </div>
                     )}
                     {selectedCard.notes && (
-                      <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
-                        <p className="text-xs font-medium text-gray-400 mb-0.5">Note</p>
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedCard.notes}</p>
+                      <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
+                        <p className="text-xs font-medium text-gray-400 dark:text-gray-600 mb-0.5">Note</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600 whitespace-pre-wrap">{selectedCard.notes}</p>
                       </div>
                     )}
                   </div>
@@ -495,31 +495,31 @@ export function AvoirsPage() {
               </div>
 
               {/* History */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
                 <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 uppercase tracking-wide flex items-center gap-1.5">
                     <History size={12} />Historique d'utilisation
                   </p>
                   <span className="text-xs text-gray-300">{history.filter(h => h.used).length}/{history.length} utilisé{history.length > 1 ? 's' : ''}</span>
                 </div>
 
                 {/* Add entry */}
-                <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
+                <div className="px-4 py-3 border-b border-gray-50 bg-gray-50 dark:bg-gray-900/50">
                   <div className="flex gap-2">
                     <div className="flex-1 relative">
-                      <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600" />
                       <input
                         value={newHistDesc} onChange={e => setNewHistDesc(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleAddHistory()}
                         placeholder="ex: Promo -20% téléviseurs utilisée"
-                        className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                        className="w-full pl-8 pr-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
                     </div>
                     <div className="relative w-28">
                       <MinusCircle size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-red-300" />
                       <input
                         type="number" step="0.01" value={newHistAmount} onChange={e => setNewHistAmount(e.target.value)}
                         placeholder="Montant"
-                        className="w-full pl-8 pr-2 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                        className="w-full pl-8 pr-2 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
                     </div>
                     <button onClick={handleAddHistory} disabled={!newHistDesc.trim() || addingHist}
                       className="px-3 py-2 rounded-xl bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-40 flex items-center gap-1 flex-shrink-0">
@@ -550,14 +550,14 @@ export function AvoirsPage() {
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-sm p-6">
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <Trash2 size={20} className="text-red-500" />
             </div>
-            <p className="text-center font-semibold text-gray-900 mb-1">Supprimer cette carte ?</p>
-            <p className="text-center text-sm text-gray-400 mb-5">L'historique sera également supprimé.</p>
+            <p className="text-center font-semibold text-gray-900 dark:text-gray-100 mb-1">Supprimer cette carte ?</p>
+            <p className="text-center text-sm text-gray-400 dark:text-gray-600 mb-5">L'historique sera également supprimé.</p>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-50">Annuler</button>
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">Annuler</button>
               <button onClick={() => handleDelete(confirmDelete)} className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-sm font-semibold text-white hover:bg-red-600">Supprimer</button>
             </div>
           </div>
