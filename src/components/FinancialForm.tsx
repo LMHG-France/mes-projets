@@ -106,17 +106,17 @@ export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: Fin
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-700">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               {initialData ? 'Modifier le mois' : 'Ajouter un mois'}
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">Renseignez vos données financières mensuelles</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-0.5">Renseignez vos données financières mensuelles</p>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded-lg transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -125,8 +125,8 @@ export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: Fin
 
           {/* Mois */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
-              <CalendarDays size={16} className="text-gray-400" /> Mois
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700 mb-1.5">
+              <CalendarDays size={16} className="text-gray-400 dark:text-gray-600" /> Mois
             </label>
             <div className="grid grid-cols-2 gap-3">
               {/* Dropdown mois */}
@@ -134,54 +134,54 @@ export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: Fin
                 <select
                   value={selectedMonth}
                   onChange={e => setSelectedMonth(Number(e.target.value))}
-                  className="appearance-none w-full border border-gray-200 rounded-lg pl-3 pr-8 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white"
+                  className="appearance-none w-full border border-gray-200 dark:border-gray-700 rounded-lg pl-3 pr-8 py-2.5 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white dark:bg-gray-800"
                 >
                   {MONTHS.map((m, i) => (
                     <option key={i} value={i}>{m}</option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 pointer-events-none" />
               </div>
               {/* Dropdown année */}
               <div className="relative">
                 <select
                   value={selectedYear}
                   onChange={e => setSelectedYear(Number(e.target.value))}
-                  className="appearance-none w-full border border-gray-200 rounded-lg pl-3 pr-8 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white"
+                  className="appearance-none w-full border border-gray-200 dark:border-gray-700 rounded-lg pl-3 pr-8 py-2.5 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white dark:bg-gray-800"
                 >
                   {YEARS.map(y => (
                     <option key={y} value={y}>{y}</option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 pointer-events-none" />
               </div>
             </div>
           </div>
 
           {/* Chiffre d'Affaires */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700 mb-1.5">
               <TrendingUp size={16} className="text-green-500" /> Chiffre d'Affaires (€)
             </label>
             <div className="relative">
               <input
                 type="number" name="revenue" value={formData.revenue}
                 onChange={handleChange} placeholder="0.00" step="0.01" min="0"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">€</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 text-sm font-medium">€</span>
             </div>
           </div>
 
           {/* Stocks & Trésorerie */}
-          <div className="border-t border-gray-100 pt-1">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Stocks & Trésorerie</p>
+          <div className="border-t border-gray-100 dark:border-gray-700 pt-1">
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 uppercase tracking-wider mb-3">Stocks & Trésorerie</p>
             <div className="space-y-3">
               {fieldPairs.map((pair, pi) => (
                 <div key={pi} className="grid grid-cols-2 gap-3">
                   {pair.map(field => (
                     <div key={field.name}>
-                      <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1.5">
+                      <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700 mb-1.5">
                         {field.icon} {field.label} (€)
                       </label>
                       <div className="relative">
@@ -189,9 +189,9 @@ export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: Fin
                           type="number" name={field.name}
                           value={formData[field.name as keyof typeof formData]}
                           onChange={handleChange} placeholder="0.00" step="0.01" min="0"
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">€</span>
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 text-xs font-medium">€</span>
                       </div>
                     </div>
                   ))}
@@ -204,10 +204,10 @@ export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: Fin
           <div className="rounded-xl p-4 border bg-sky-50 border-sky-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Wallet size={13} className="text-sky-500" /> Liquidité Totale calculée
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">
                   Stock Amazon + Stock Attente + Fonds Amazon + Fonds Banque + Avoirs Fourn.
                 </p>
               </div>
@@ -218,11 +218,11 @@ export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: Fin
           </div>
 
           {/* Bénéfice net calculé */}
-          <div className={`rounded-xl p-4 border ${computedProfit >= 0 ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
+          <div className={`rounded-xl p-4 border ${computedProfit >= 0 ? 'bg-blue-50 dark:bg-blue-950 border-blue-100' : 'bg-red-50 dark:bg-red-950 border-red-100'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Bénéfice net calculé</p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">Bénéfice net calculé</p>
+                <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">
                   Liquidité Totale − Dettes
                 </p>
               </div>
@@ -234,20 +234,20 @@ export function FinancialForm({ onSubmit, onClose, initialData, isLoading }: Fin
 
           {/* Notes */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
-              <FileText size={16} className="text-gray-400" /> Notes (optionnel)
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700 mb-1.5">
+              <FileText size={16} className="text-gray-400 dark:text-gray-600" /> Notes (optionnel)
             </label>
             <textarea
               name="notes" value={formData.notes} onChange={handleChange}
               placeholder="Remarques, événements du mois..." rows={2}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
           {/* Boutons */}
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm">
+              className="flex-1 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-700 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors text-sm">
               Annuler
             </button>
             <button type="submit" disabled={isLoading}
