@@ -119,19 +119,19 @@ function filterByRange(
 function CustomTooltip({ active, payload, label, isAll }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-lg px-4 py-3 min-w-[180px]">
-      <p className="text-xs font-semibold text-gray-500 mb-2 capitalize">{label}</p>
+    <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-lg dark:shadow-none px-4 py-3 min-w-[180px]">
+      <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-2 capitalize">{label}</p>
       {isAll ? (
         payload.map((p: any) => (
           <div key={p.dataKey} className="flex items-center justify-between gap-4 mb-1">
             <span className="text-xs font-medium" style={{ color: p.color }}>{p.name}</span>
-            <span className="text-xs font-bold text-gray-900">{formatCurrency(p.value)}</span>
+            <span className="text-xs font-bold text-gray-900 dark:text-gray-100">{formatCurrency(p.value)}</span>
           </div>
         ))
       ) : (
         <>
-          <p className="text-sm font-bold text-gray-900">{formatCurrency(payload[0].value)}</p>
-          <p className="text-xs text-gray-400">{payload[0].name}</p>
+          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatCurrency(payload[0].value)}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-600">{payload[0].name}</p>
         </>
       )}
     </div>
@@ -222,28 +222,28 @@ export function FinancialTracker() {
         {/* En-tête */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Suivi Financier</h1>
-            <p className="text-gray-500 mt-1">Gérez vos performances financières mensuelles</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Suivi Financier</h1>
+            <p className="text-gray-500 dark:text-gray-500 mt-1">Gérez vos performances financières mensuelles</p>
           </div>
           <button
             onClick={() => { setEditingFinancial(null); setShowForm(true); }}
-            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+            className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm dark:shadow-none"
           >
             <Plus size={20} /> Ajouter un mois
           </button>
         </div>
 
         {/* Graphique */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-none p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-3 flex-wrap">
-              <BarChart2 size={20} className="text-gray-400 shrink-0" />
-              <h2 className="text-base font-semibold text-gray-800">
+              <BarChart2 size={20} className="text-gray-400 dark:text-gray-600 shrink-0" />
+              <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">
                 {isAllMetrics ? 'Évolution — Toutes les métriques' : `Évolution — ${currentMetric?.label}`}
               </h2>
               {!isAllMetrics && evolution !== null && (
                 <span className={`inline-flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full ${
-                  evolution >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                  evolution >= 0 ? 'bg-green-50 dark:bg-green-950 text-green-700' : 'bg-red-50 dark:bg-red-950 text-red-600'
                 }`}>
                   {evolution >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                   {evolution >= 0 ? '+' : ''}{evolution.toFixed(1)}%
@@ -256,44 +256,44 @@ export function FinancialTracker() {
                 <select
                   value={activeRange}
                   onChange={e => setActiveRange(e.target.value as RangeKey)}
-                  className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  className="appearance-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 dark:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   {RANGE_OPTIONS.map(r => (
-                    <option key={r.value} value={r.value} className="text-gray-900">{r.label}</option>
+                    <option key={r.value} value={r.value} className="text-gray-900 dark:text-gray-100">{r.label}</option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 pointer-events-none" />
               </div>
 
               <div className="relative">
                 <select
                   value={activeMetric}
                   onChange={e => setActiveMetric(e.target.value as MetricKey)}
-                  className="appearance-none bg-white rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer border-2"
+                  className="appearance-none bg-white dark:bg-gray-800 rounded-lg pl-3 pr-8 py-2 text-xs font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer border-2"
                   style={{ borderColor: isAllMetrics ? '#6b7280' : (currentMetric?.color ?? '#6b7280') }}
                 >
-                  <option value="all" className="text-gray-900">Tout</option>
+                  <option value="all" className="text-gray-900 dark:text-gray-100">Tout</option>
                   {METRICS.map(m => (
-                    <option key={m.key} value={m.key} className="text-gray-900">{m.label}</option>
+                    <option key={m.key} value={m.key} className="text-gray-900 dark:text-gray-100">{m.label}</option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 pointer-events-none" />
               </div>
             </div>
           </div>
 
           {isCustom && (
-            <div className="flex flex-wrap items-center gap-3 mb-5 p-4 bg-gray-50 rounded-xl">
-              <span className="text-xs font-semibold text-gray-600">Période :</span>
+            <div className="flex flex-wrap items-center gap-3 mb-5 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-600">Période :</span>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500">Du</label>
+                <label className="text-xs text-gray-500 dark:text-gray-500">Du</label>
                 <input type="month" value={customStart} onChange={e => setCustomStart(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 dark:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800" />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500">Au</label>
+                <label className="text-xs text-gray-500 dark:text-gray-500">Au</label>
                 <input type="month" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 dark:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800" />
               </div>
             </div>
           )}
@@ -301,7 +301,7 @@ export function FinancialTracker() {
           {chartData.length < 1 ? (
             <div className="h-52 flex flex-col items-center justify-center gap-3">
               <BarChart2 size={44} className="text-gray-200" />
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 dark:text-gray-600">
                 {isCustom && (!customStart || !customEnd) ? 'Sélectionnez une plage de dates' : 'Pas de données sur cette période'}
               </p>
             </div>
@@ -351,14 +351,14 @@ export function FinancialTracker() {
         {/* Case somme de la période */}
         {chartSum !== null && chartData.length > 0 && (
           <div
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 flex items-center justify-between"
+            className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-none px-6 py-4 flex items-center justify-between"
             style={{ borderLeft: `4px solid ${currentMetric?.color ?? '#6b7280'}` }}
           >
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 uppercase tracking-wider">
                 Total — {currentMetric?.label}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">
                 Somme sur la période sélectionnée ({chartData.length} mois)
               </p>
             </div>
@@ -373,15 +373,15 @@ export function FinancialTracker() {
         {loading ? (
           <div className="text-center py-16">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4" />
-            <p className="text-gray-500">Chargement...</p>
+            <p className="text-gray-500 dark:text-gray-500">Chargement...</p>
           </div>
         ) : financials.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 p-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 dark:bg-blue-950 rounded-2xl mb-4">
               <TrendingUp size={32} className="text-blue-400" />
             </div>
-            <p className="text-gray-700 font-medium text-lg mb-1">Aucune donnée financière</p>
-            <p className="text-gray-400 text-sm mb-6">Commencez par ajouter votre premier mois</p>
+            <p className="text-gray-700 dark:text-gray-300 dark:text-gray-700 font-medium text-lg mb-1">Aucune donnée financière</p>
+            <p className="text-gray-400 dark:text-gray-600 text-sm mb-6">Commencez par ajouter votre premier mois</p>
             <button
               onClick={() => { setEditingFinancial(null); setShowForm(true); }}
               className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
@@ -391,7 +391,7 @@ export function FinancialTracker() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-gray-500 -mt-4">
+            <p className="text-sm text-gray-500 dark:text-gray-500 -mt-4">
               {financials.length} mois enregistré{financials.length > 1 ? 's' : ''}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -454,24 +454,24 @@ function MonthCard({ financial: f, previous, formatMonth, formatCurrency, onEdit
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-      <div className="px-5 pt-5 pb-4 border-b border-gray-50">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-none hover:shadow-md dark:shadow-none transition-shadow flex flex-col">
+      <div className="px-5 pt-5 pb-4 border-b border-gray-50 dark:border-gray-700">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 capitalize">
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 uppercase tracking-wider mb-1 capitalize">
               {formatMonth(f.month)}
             </p>
             <p className={`text-2xl font-bold leading-tight ${profit >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
               {formatCurrency(profit)}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">Bénéfice net du mois</p>
+            <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">Bénéfice net du mois</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-sm font-bold text-green-600">{formatCurrency(f.revenue)}</p>
-            <p className="text-xs text-gray-400">Chiffre d'affaires</p>
+            <p className="text-xs text-gray-400 dark:text-gray-600">Chiffre d'affaires</p>
             {margin !== null && (
               <span className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                margin >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                margin >= 0 ? 'bg-green-50 dark:bg-green-950 text-green-700' : 'bg-red-50 dark:bg-red-950 text-red-600'
               }`}>
                 {margin.toFixed(1)}% marge
               </span>
@@ -480,43 +480,43 @@ function MonthCard({ financial: f, previous, formatMonth, formatCurrency, onEdit
         </div>
         {/* Position nette du mois */}
         <div className="mt-2 flex items-center gap-1.5">
-          <span className="text-xs text-gray-400">Position nette :</span>
-          <span className={`text-xs font-semibold ${netPos >= 0 ? 'text-gray-700' : 'text-red-500'}`}>
+          <span className="text-xs text-gray-400 dark:text-gray-600">Position nette :</span>
+          <span className={`text-xs font-semibold ${netPos >= 0 ? 'text-gray-700 dark:text-gray-300 dark:text-gray-700' : 'text-red-500'}`}>
             {formatCurrency(netPos)}
           </span>
           {previous && (
-            <span className="text-xs text-gray-400 ml-1">
+            <span className="text-xs text-gray-400 dark:text-gray-600 ml-1">
               (vs {formatCurrency(getNetPosition(previous))} mois préc.)
             </span>
           )}
         </div>
-        {f.notes && <p className="text-xs text-gray-400 mt-1 italic line-clamp-1">{f.notes}</p>}
+        {f.notes && <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 italic line-clamp-1">{f.notes}</p>}
       </div>
 
       <div className="px-5 py-4 flex-1 space-y-2">
         {rows.map((row, i) => (
           <div key={i} className="flex items-center justify-between py-0.5">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
               {row.icon}<span>{row.label}</span>
             </div>
-            <span className={`text-xs font-semibold ${row.isDebt ? 'text-red-500' : 'text-gray-700'}`}>
+            <span className={`text-xs font-semibold ${row.isDebt ? 'text-red-500' : 'text-gray-700 dark:text-gray-300 dark:text-gray-700'}`}>
               {formatCurrency(row.value)}
             </span>
           </div>
         ))}
-        <div className="flex items-center justify-between pt-2 mt-1 border-t border-gray-100">
-          <span className="text-xs font-bold text-gray-600">Liquidité Totale</span>
+        <div className="flex items-center justify-between pt-2 mt-1 border-t border-gray-100 dark:border-gray-700">
+          <span className="text-xs font-bold text-gray-600 dark:text-gray-400 dark:text-gray-600">Liquidité Totale</span>
           <span className="text-xs font-bold text-blue-700">{formatCurrency(liquidite)}</span>
         </div>
       </div>
 
-      <div className="px-5 pb-5 pt-2 flex gap-2 border-t border-gray-50">
+      <div className="px-5 pb-5 pt-2 flex gap-2 border-t border-gray-50 dark:border-gray-700">
         <button onClick={onEdit}
-          className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+          className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 dark:text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
           <Edit2 size={14} /> Modifier
         </button>
         <button onClick={onDelete} disabled={isDeleting}
-          className="flex items-center justify-center gap-1.5 border border-red-100 text-red-500 py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-40"
+          className="flex items-center justify-center gap-1.5 border border-red-100 text-red-500 py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-50 dark:bg-red-950 transition-colors disabled:opacity-40"
           title="Supprimer">
           <Trash2 size={14} />
         </button>
