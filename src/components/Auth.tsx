@@ -31,10 +31,10 @@ export function Auth() {
   if (user) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-600">{user.email}</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-600">{user.email}</span>
         <button
           onClick={() => signOut()}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-700 hover:text-gray-900 dark:text-gray-100"
         >
           <LogOut size={18} />
           Déconnexion
@@ -47,7 +47,7 @@ export function Auth() {
     <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-700 mb-1">
             Email
           </label>
           <input
@@ -55,13 +55,13 @@ export function Auth() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="your@email.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-700 mb-1">
             Mot de passe
           </label>
           <input
@@ -69,13 +69,13 @@ export function Auth() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"
           />
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+          <div className="p-3 bg-red-50 dark:bg-red-950 text-red-700 rounded-lg text-sm">
             {error}
           </div>
         )}
