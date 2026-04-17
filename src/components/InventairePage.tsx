@@ -53,7 +53,7 @@ function useCronStatus() {
 function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirmer', confirmColor = 'red', extraButton = null }: any) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-sm p-6">
+      <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-sm p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${confirmColor === 'red' ? 'bg-red-100' : 'bg-blue-100'}`}>
             <Trash2 size={18} className={confirmColor === 'red' ? 'text-red-500' : 'text-blue-500'} />
@@ -61,7 +61,7 @@ function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirmer'
           <p className="font-semibold text-gray-900 dark:text-gray-100">{message}</p>
         </div>
         <div className="flex gap-2 mt-4">
-          <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">Annuler</button>
+          <button onClick={onCancel} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">Annuler</button>
           {extraButton}
           <button onClick={onConfirm} className={`flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors ${confirmColor === 'red' ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'}`}>{confirmLabel}</button>
         </div>
@@ -78,19 +78,19 @@ function AddItemForm({ onAdd, onCancel }: { onAdd: (name: string, qty: number, p
     <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 rounded-xl p-4 space-y-3">
       <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Nouvel article</p>
       <input value={name} onChange={e => setName(e.target.value)} placeholder="Nom du produit"
-        className="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
+        className="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
       <div className="flex gap-2">
         <input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="Qté" min="1"
-          className="w-24 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
+          className="w-24 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
         <input type="text" value={price} onChange={e => setPrice(e.target.value)} placeholder="Prix unitaire (€)"
-          className="flex-1 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
+          className="flex-1 px-3 py-2 text-sm border border-blue-200 rounded-lg bg-white dark:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
       </div>
       <div className="flex gap-2">
         <button onClick={() => { if (name.trim()) onAdd(name.trim(), parseInt(qty)||1, parseFloat(price)||0); }}
           className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
           <Check size={14} /> Ajouter
         </button>
-        <button onClick={onCancel} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-500 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors"><X size={14} /></button>
+        <button onClick={onCancel} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors"><X size={14} /></button>
       </div>
     </div>
   );
@@ -110,15 +110,15 @@ function StockRow({ item, onUpdate, onDelete }: { item: any; onUpdate: (id: stri
           <input type="number" value={qty} onChange={e => setQty(e.target.value)} className="w-14 px-2 py-1 text-xs border border-blue-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 jb" />
           <input type="text" value={price} onChange={e => setPrice(e.target.value)} className="w-20 px-2 py-1 text-xs border border-blue-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 jb" />
           <button onClick={save} className="p-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700"><Check size={12} /></button>
-          <button onClick={() => setEditing(false)} className="p-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700"><X size={12} /></button>
+          <button onClick={() => setEditing(false)} className="p-1 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700"><X size={12} /></button>
         </div>
       ) : (
         <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="text-xs text-gray-400 dark:text-gray-600 jb hidden sm:inline">{item.unit_price > 0 ? `${item.unit_price.toFixed(2)} €/u` : '—'}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-400 jb hidden sm:inline">{item.unit_price > 0 ? `${item.unit_price.toFixed(2)} €/u` : '—'}</span>
           <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 jb w-16 text-right">{item.unit_price > 0 ? `${(item.quantity * item.unit_price).toFixed(2)} €` : '—'}</span>
           <div className="flex items-center gap-1">
-            <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 dark:text-gray-600 hover:text-blue-500 hover:bg-blue-50 dark:bg-blue-950 transition-colors"><Edit2 size={13} /></button>
-            <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg text-gray-400 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:bg-red-950 transition-colors"><Trash2 size={13} /></button>
+            <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 dark:text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:bg-blue-950 transition-colors"><Edit2 size={13} /></button>
+            <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg text-gray-400 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:bg-red-950 transition-colors"><Trash2 size={13} /></button>
           </div>
         </div>
       )}
@@ -145,19 +145,19 @@ function ImportModal({ order, onImport, onClose }: { order: Order; onImport: (it
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-2xl dark:shadow-none w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <div>
             <h3 className="font-bold text-gray-900 dark:text-gray-100">{order.supplier_name}</h3>
-            <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">Sélectionnez les articles à ajouter au stock</p>
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">Sélectionnez les articles à ajouter au stock</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 rounded-xl text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700"><X size={18} /></button>
         </div>
         <div className="flex items-center justify-between px-6 py-2.5 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
-          <span className="text-xs text-gray-500 dark:text-gray-500 font-medium">{selectedCount} / {order.items.length} sélectionnés</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{selectedCount} / {order.items.length} sélectionnés</span>
           <div className="flex gap-2">
             <button onClick={() => toggleAll(true)} className="text-xs px-3 py-1 rounded-lg bg-blue-100 text-blue-600 font-medium hover:bg-blue-200">Tout</button>
-            <button onClick={() => toggleAll(false)} className="text-xs px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-500 font-medium hover:bg-gray-300">Aucun</button>
+            <button onClick={() => toggleAll(false)} className="text-xs px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium hover:bg-gray-300">Aucun</button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -175,15 +175,15 @@ function ImportModal({ order, onImport, onClose }: { order: Order; onImport: (it
                 <input type="number" value={quantities[i]} min={1} max={item.quantity}
                   onClick={e => e.stopPropagation()}
                   onChange={e => setQuantities(p => ({ ...p, [i]: Math.min(item.quantity, Math.max(1, parseInt(e.target.value)||1)) }))}
-                  className="w-12 px-2 py-1 text-xs border border-gray-200 dark:border-gray-700 rounded-lg jb text-center focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 bg-white dark:bg-gray-800" />
+                  className="w-12 px-2 py-1 text-xs border border-gray-200 dark:border-gray-700 rounded-lg jb text-center focus:outline-none focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 bg-white dark:bg-gray-850" />
                 <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 dark:text-gray-700 truncate">{item.name}</span>
-                <span className="text-xs text-gray-400 dark:text-gray-600 jb flex-shrink-0">{unitPrice.toFixed(2)} €/u</span>
+                <span className="text-xs text-gray-400 dark:text-gray-400 jb flex-shrink-0">{unitPrice.toFixed(2)} €/u</span>
               </div>
             );
           })}
         </div>
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-500 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">Annuler</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">Annuler</button>
           <button onClick={handleImport} disabled={loading || selectedCount === 0}
             className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 disabled:opacity-50">
             {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus size={15} />}
@@ -399,27 +399,27 @@ export function InventairePage() {
               { label:'Unités stock',   val:String(stockUnits),             sub:'unités disponibles',              icon:'✅', iconBg:'#fff7ed', t:'stock' as const },
             ].map((s,i) => (
               <button key={i} onClick={() => setTab(s.t)}
-                className={`text-left bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-none p-4 flex items-center gap-3 hover:shadow-md dark:shadow-none transition-all ${tab === s.t ? 'ring-2 ring-blue-400' : ''}`}>
+                className={`text-left bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none p-4 flex items-center gap-3 hover:shadow-md dark:shadow-none transition-all ${tab === s.t ? 'ring-2 ring-blue-400' : ''}`}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{ background: s.iconBg }}>{s.icon}</div>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-400 dark:text-gray-600 font-medium truncate">{s.label}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400 font-medium truncate">{s.label}</p>
                   <p className="text-lg font-bold text-gray-900 dark:text-gray-100 jb leading-tight">{s.val}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-600">{s.sub}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400">{s.sub}</p>
                 </div>
               </button>
             ))}
           </div>
 
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-            <div className="flex gap-1 bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm dark:shadow-none">
-              <button onClick={() => setTab('transit')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'transit' ? 'bg-blue-600 text-white shadow-sm dark:shadow-none' : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700'}`}>
+            <div className="flex gap-1 bg-white dark:bg-gray-850 rounded-xl p-1 shadow-sm dark:shadow-none">
+              <button onClick={() => setTab('transit')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'transit' ? 'bg-blue-600 text-white shadow-sm dark:shadow-none' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700'}`}>
                 🚚 En transit <span className="ml-1.5 text-xs opacity-70">{pending.length}</span>
               </button>
-              <button onClick={() => setTab('stock')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'stock' ? 'bg-blue-600 text-white shadow-sm dark:shadow-none' : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700'}`}>
+              <button onClick={() => setTab('stock')} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'stock' ? 'bg-blue-600 text-white shadow-sm dark:shadow-none' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:text-gray-700'}`}>
                 🏠 Mon stock <span className="ml-1.5 text-xs opacity-70">{stockItems.length}</span>
               </button>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-none text-xs">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-850 rounded-xl shadow-sm dark:shadow-none text-xs">
               {lateCount > 0     && <span className="flex items-center gap-1 text-red-500 font-medium"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lateCount} en retard</span>}
               {relaisCount > 0   && <span className="flex items-center gap-1 text-amber-500 font-medium"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />{relaisCount} au relais</span>}
               {todayCount > 0    && <span className="flex items-center gap-1 text-emerald-600 font-medium"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />{todayCount} aujourd'hui</span>}
@@ -439,7 +439,7 @@ export function InventairePage() {
 
           {tab === 'transit' && (
             pending.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-16 text-center shadow-sm dark:shadow-none">
+              <div className="bg-white dark:bg-gray-850 rounded-2xl p-16 text-center shadow-sm dark:shadow-none">
                 <CheckCircle size={48} className="text-emerald-300 mx-auto mb-4" />
                 <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700">Aucune commande en cours</p>
                 <button onClick={() => { setEditingOrder(null); setShowForm(true); }}
@@ -449,18 +449,18 @@ export function InventairePage() {
               </div>
             ) : (
               <div className="flex gap-4 items-start">
-                <div className="w-96 flex-shrink-0 bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-none flex flex-col overflow-hidden">
+                <div className="w-96 flex-shrink-0 bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none flex flex-col overflow-hidden">
                   <div className="p-2 border-b border-gray-50 dark:border-gray-700">
                     <div className="relative">
-                      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600" />
+                      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
                       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..."
                         className="w-full pl-8 pr-8 py-2 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500" />
-                      {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600"><X size={12} /></button>}
+                      {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:text-gray-400"><X size={12} /></button>}
                     </div>
                   </div>
                   <div className="p-2 flex flex-col gap-1 overflow-y-auto max-h-[600px]">
                     {filteredPending.length === 0 ? (
-                      <p className="text-sm text-gray-400 dark:text-gray-600 text-center py-6">Aucun résultat</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-400 text-center py-6">Aucun résultat</p>
                     ) : filteredPending.map((order) => {
                       const st  = (order.delivery_status ?? 'pending') as keyof typeof STATUS;
                       const cfg = STATUS[st];
@@ -480,13 +480,13 @@ export function InventairePage() {
                                 <ChevronRight size={14} className={`flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-gray-300 dark:text-gray-700'}`} />
                               </div>
                               <div className="flex items-center justify-between mt-0.5">
-                                <p className="text-xs text-gray-400 dark:text-gray-600">{qty} unités</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-400">{qty} unités</p>
                                 {st === 'delivered' ? (
                                   <p className="text-xs font-semibold text-emerald-500">{order.delivery_type === 'pickup' ? 'Récupéré' : 'Livré'}</p>
                                 ) : st === 'available' ? (
                                   <p className="text-xs font-medium text-amber-500">Au relais</p>
                                 ) : order.expected_delivery_date ? (
-                                  <p className={`text-xs font-medium ${dl !== null && dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400 dark:text-gray-600'}`}>
+                                  <p className={`text-xs font-medium ${dl !== null && dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400 dark:text-gray-400'}`}>
                                     {dl === 0 ? 'Auj.' : fmtShort(order.expected_delivery_date)}
                                   </p>
                                 ) : <p className="text-xs text-gray-300 dark:text-gray-700">—</p>}
@@ -512,22 +512,22 @@ export function InventairePage() {
                   const dl  = selectedOrder.expected_delivery_date ? daysLeft(selectedOrder.expected_delivery_date) : null;
                   return (
                     <div key={selectedOrder.id} className="flex-1 detail-anim space-y-3 min-w-0">
-                      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-none p-5" style={{ borderTop: '3px solid #3b82f6' }}>
+                      <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none p-5" style={{ borderTop: '3px solid #3b82f6' }}>
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">{selectedOrder.supplier_name}</h2>
-                            <p className="text-sm text-gray-400 dark:text-gray-600 mt-0.5">Commandé le {fmtLong(selectedOrder.created_at)}</p>
+                            <p className="text-sm text-gray-400 dark:text-gray-400 mt-0.5">Commandé le {fmtLong(selectedOrder.created_at)}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             {selectedOrder.delivery_type === 'pickup'
                               ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 dark:bg-blue-950"><MapPin size={11} />Point relais</span>
                               : selectedOrder.delivery_type === 'home'
-                              ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-gray-900"><Home size={11} />Domicile</span>
+                              ? <span className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900"><Home size={11} />Domicile</span>
                               : null}
                             <span className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
                             {selectedOrder.order_link && (
                               <a href={selectedOrder.order_link} target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-600 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-700 transition-colors">
+                                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-gray-600 dark:text-gray-400 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-700 transition-colors">
                                 <ExternalLink size={11} />Commande
                               </a>
                             )}
@@ -542,7 +542,7 @@ export function InventairePage() {
                               <Plus size={11} />Ajouter au stock
                             </button>
                             <button onClick={() => { setEditingOrder(selectedOrder); setShowForm(true); }}
-                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
+                              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 transition-colors">
                               <Edit2 size={11} />Modifier
                             </button>
                             <button onClick={() => setConfirmDeleteId(selectedOrder.id)}
@@ -552,10 +552,10 @@ export function InventairePage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-50 dark:border-gray-700 flex-wrap">
-                          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-500"><Box size={14} className="text-gray-300 dark:text-gray-700" /><span><strong className="text-gray-800 dark:text-gray-200">{qty}</strong> unités</span></div>
-                          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-500"><Package size={14} className="text-gray-300 dark:text-gray-700" /><span><strong className="text-gray-800 dark:text-gray-200">{selectedOrder.items.length}</strong> articles</span></div>
+                          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"><Box size={14} className="text-gray-300 dark:text-gray-700" /><span><strong className="text-gray-800 dark:text-gray-200">{qty}</strong> unités</span></div>
+                          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"><Package size={14} className="text-gray-300 dark:text-gray-700" /><span><strong className="text-gray-800 dark:text-gray-200">{selectedOrder.items.length}</strong> articles</span></div>
                           {selectedOrder.expected_delivery_date && (
-                            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-500">
+                            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                               <Clock size={14} className="text-gray-300 dark:text-gray-700" />
                               <span>Livraison <strong className={dl !== null && dl <= 0 ? 'text-emerald-600' : 'text-gray-800 dark:text-gray-200'}>
                                 {dl === 0 ? "aujourd'hui" : dl === 1 ? 'demain' : fmtShort(selectedOrder.expected_delivery_date)}
@@ -563,14 +563,14 @@ export function InventairePage() {
                             </div>
                           )}
                           <div className="ml-auto text-right">
-                            <p className="text-xs text-gray-400 dark:text-gray-600">Total</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-400">Total</p>
                             <p className="text-2xl font-bold jb text-blue-600">{selectedOrder.total_price.toFixed(2)} €</p>
                           </div>
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
+                      <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
                         <div className="px-5 py-3 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between">
-                          <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 uppercase tracking-wide">Articles</p>
+                          <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide">Articles</p>
                           <p className="text-xs text-gray-300 dark:text-gray-700 jb">{selectedOrder.items.length} lignes</p>
                         </div>
                         <div className="p-3 space-y-0.5">
@@ -602,13 +602,13 @@ export function InventairePage() {
             <div className="space-y-3">
               <div className="flex gap-2 flex-wrap">
                 <div className="relative flex-1 min-w-48">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" />
                   <input value={searchStock} onChange={e => setSearchStock(e.target.value)} placeholder="Rechercher un produit..."
-                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 shadow-sm dark:shadow-none" />
-                  {searchStock && <button onClick={() => setSearchStock('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:text-gray-400 dark:text-gray-600"><X size={13} /></button>}
+                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 shadow-sm dark:shadow-none" />
+                  {searchStock && <button onClick={() => setSearchStock('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:text-gray-400"><X size={13} /></button>}
                 </div>
                 <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
-                  className="px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 shadow-sm dark:shadow-none text-gray-600 dark:text-gray-400 dark:text-gray-600 cursor-pointer">
+                  className="px-3 py-2.5 text-sm bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 shadow-sm dark:shadow-none text-gray-600 dark:text-gray-400 dark:text-gray-400 cursor-pointer">
                   <option value="name">Nom (A→Z)</option>
                   <option value="qty_desc">Unités ↓</option>
                   <option value="qty_asc">Unités ↑</option>
@@ -618,33 +618,33 @@ export function InventairePage() {
                   <option value="value_asc">Valeur totale ↑</option>
                 </select>
                 <button onClick={() => setShowAdd(v => !v)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm dark:shadow-none transition-all ${showAdd ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-600' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm dark:shadow-none transition-all ${showAdd ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
                   <Plus size={15} /> Ajouter
                 </button>
               </div>
               {showAdd && <AddItemForm onAdd={async (name, qty, price) => { await addItem({ name, quantity: qty, unit_price: price }); setShowAdd(false); }} onCancel={() => setShowAdd(false)} />}
               {loadingStock ? (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center shadow-sm dark:shadow-none"><div className="w-8 h-8 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto" /></div>
+                <div className="bg-white dark:bg-gray-850 rounded-2xl p-12 text-center shadow-sm dark:shadow-none"><div className="w-8 h-8 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto" /></div>
               ) : stockItems.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-16 text-center shadow-sm dark:shadow-none">
+                <div className="bg-white dark:bg-gray-850 rounded-2xl p-16 text-center shadow-sm dark:shadow-none">
                   <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950 rounded-full flex items-center justify-center mx-auto mb-4"><Package size={32} className="text-blue-300" /></div>
                   <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-700">Stock vide</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-600 mt-1">Ajoutez des articles ou importez depuis une commande</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">Ajoutez des articles ou importez depuis une commande</p>
                 </div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
+                <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-sm dark:shadow-none overflow-hidden">
                   <div className="px-5 py-3 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <p className="text-xs font-semibold text-gray-400 dark:text-gray-600 uppercase tracking-wide">Références en stock</p>
+                      <p className="text-xs font-semibold text-gray-400 dark:text-gray-400 uppercase tracking-wide">Références en stock</p>
                       {searchStock && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 font-medium">{filteredStock.length} résultat{filteredStock.length !== 1 ? 's' : ''}</span>}
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs text-gray-400 dark:text-gray-600 jb">{stockUnits} unités</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-400 jb">{stockUnits} unités</span>
                       <span className="text-sm font-bold jb text-blue-600">{stockValue.toFixed(2)} €</span>
                     </div>
                   </div>
                   {filteredStock.length === 0 ? (
-                    <div className="p-12 text-center"><p className="text-sm text-gray-400 dark:text-gray-600">Aucun résultat pour "<span className="font-medium text-gray-600 dark:text-gray-400 dark:text-gray-600">{searchStock}</span>"</p></div>
+                    <div className="p-12 text-center"><p className="text-sm text-gray-400 dark:text-gray-400">Aucun résultat pour "<span className="font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">{searchStock}</span>"</p></div>
                   ) : (
                     <div className="p-3 space-y-0.5">
                       {filteredStock.map((item, idx) => (
