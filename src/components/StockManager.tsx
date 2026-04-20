@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
-import { Package, Truck, MapPin, Home, Clock, ExternalLink, CheckCircle, ChevronRight, Box, Plus, Trash2, Edit2, Check, X, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Package, GitMerge, Truck, MapPin, Home, Clock, ExternalLink, CheckCircle, ChevronRight, Box, Plus, Trash2, Edit2, Check, X, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -195,6 +195,51 @@ function ImportModal({ order, onImport, onClose }: {
 }
 
 // ── Main component ───────────────────────────────────────────
+
+// ─── Merge Group Card ────────────────────────────────────────────────────────
+function MergeGroupCard({ group, onMerge, merging }: {
+  group: { items: { id: string; name: string; quantity: number; unit_price: number }[]; suggested: string };
+  onMerge: (name: string) => Promise<void>;
+  merging: boolean;
+}) {
+  const [finalName, setFinalName] = useState(group.suggested);
+  const totalQty = group.items.reduce((s, i) => s + i.quantity, 0);
+  const avgPrice = group.items.reduce((s, i) => s + i.unit_price * i.quantity, 0) / (totalQty || 1);
+
+  return (
+    <div className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
+      <div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          {group.items.length} produits similaires
+        </span>
+        <span className="text-xs text-gray-400 dark:text-gray-300 jb">
+          → {totalQty} unités · {avgPrice.toFixed(2)} €/u moy.
+        </span>
+      </div>
+      <div className="divide-y divide-gray-50 dark:divide-gray-700">
+        {group.items.map(item => (
+          <div key={item.id} className="px-4 py-2 flex items-center justify-between">
+            <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">{item.name}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-400 ml-3 jb flex-shrink-0">
+              {item.quantity}u · {item.unit_price.toFixed(2)} €
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 py-3 bg-blue-50 dark:bg-blue-950 space-y-2">
+        <p className="text-xs font-medium text-gray-600 dark:text-gray-300">Nom final :</p>
+        <input value={finalName} onChange={e => setFinalName(e.target.value)}
+          className="w-full px-3 py-1.5 text-sm border border-blue-200 dark:border-blue-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <button onClick={() => onMerge(finalName)} disabled={merging || !finalName.trim()}
+          className="w-full px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+          {merging ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <GitMerge size={14} />}
+          Fusionner
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function StockManager() {
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -208,6 +253,59 @@ export function StockManager() {
   const [importModalOrder, setImportModalOrder] = useState<Order | null>(null);
 
   const { items: stockItems, loading: loadingStock, addItem, addFromOrder, updateItem, deleteItem, totalValue: stockValue, totalUnits: stockUnits } = useStock();
+  const { theme } = useTheme();
+
+  // Fuzzy similarity using bigrams
+  const similarity = (a: string, b: string): number => {
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+    const na = norm(a), nb = norm(b);
+    if (na === nb) return 1;
+    if (na.length < 2 || nb.length < 2) return 0;
+    const getBigrams = (s: string) => { const bg = new Set<string>(); for (let i=0;i<s.length-1;i++) bg.add(s[i]+s[i+1]); return bg; };
+    const ba = getBigrams(na), bb = getBigrams(nb);
+    let inter = 0; ba.forEach(b => { if (bb.has(b)) inter++; });
+    return (2 * inter) / (ba.size + bb.size);
+  };
+
+  const detectDuplicates = () => {
+    const threshold = 0.45;
+    const used = new Set<string>();
+    const groups: { items: typeof stockItems; suggested: string }[] = [];
+    for (let i = 0; i < stockItems.length; i++) {
+      if (used.has(stockItems[i].id)) continue;
+      const group = [stockItems[i]];
+      for (let j = i + 1; j < stockItems.length; j++) {
+        if (used.has(stockItems[j].id)) continue;
+        if (similarity(stockItems[i].name, stockItems[j].name) >= threshold) {
+          group.push(stockItems[j]);
+        }
+      }
+      if (group.length > 1) {
+        used.add(stockItems[i].id);
+        group.slice(1).forEach(x => used.add(x.id));
+        // Suggested name: shortest one (usually the cleanest)
+        const suggested = group.reduce((a, b) => a.name.length <= b.name.length ? a : b).name;
+        groups.push({ items: group, suggested });
+      }
+    }
+    setMergeGroups(groups);
+    setShowMerge(true);
+  };
+
+  const handleMerge = async (group: { items: typeof stockItems; suggested: string }, finalName: string) => {
+    setMerging(true);
+    // Weighted average price + total quantity
+    const totalQty = group.items.reduce((s, i) => s + i.quantity, 0);
+    const avgPrice = group.items.reduce((s, i) => s + i.unit_price * i.quantity, 0) / (totalQty || 1);
+    // Keep first item, delete others
+    const [keep, ...rest] = group.items;
+    await updateItem(keep.id, { quantity: totalQty, unit_price: parseFloat(avgPrice.toFixed(4)) });
+    if (finalName !== keep.name) {
+      await supabase.from('stock_items').update({ name: finalName }).eq('id', keep.id);
+    }
+    for (const r of rest) await deleteItem(r.id);
+    setMerging(false);
+  };
   const [confirmDeleteOrder, setConfirmDeleteOrder] = useState<string | null>(null);
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -494,6 +592,11 @@ export function StockManager() {
                   <option value="value_desc">Valeur totale ↓</option>
                   <option value="value_asc">Valeur totale ↑</option>
                 </select>
+                <button onClick={detectDuplicates}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm dark:shadow-none"
+                  title="Détecter et fusionner les doublons">
+                  <GitMerge size={15} /> Doublons
+                </button>
                 <button onClick={() => setShowAdd(v => !v)}
                   className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm dark:shadow-none transition-all ${showAdd ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
                   <Plus size={15} /> Ajouter
@@ -552,6 +655,53 @@ export function StockManager() {
           )}
         </div>
       </div>
+
+
+      {/* ── Merge Duplicates Modal ── */}
+      {showMerge && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.6)'}}>
+          <div className="bg-white dark:bg-gray-850 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <GitMerge size={16} className="text-blue-500" />
+                  Doublons détectés
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-300 mt-0.5">
+                  {mergeGroups.length === 0 ? 'Aucun doublon trouvé ✓' : `${mergeGroups.length} groupe${mergeGroups.length > 1 ? 's' : ''} de produits similaires`}
+                </p>
+              </div>
+              <button onClick={() => setShowMerge(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {mergeGroups.length === 0 ? (
+                <div className="py-8 text-center">
+                  <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Check size={24} className="text-green-500" />
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 font-medium">Aucun doublon détecté</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">Tous vos produits semblent distincts</p>
+                </div>
+              ) : (
+                mergeGroups.map((group, gi) => (
+                  <MergeGroupCard key={gi} group={group} onMerge={async (name) => {
+                    await handleMerge(group, name);
+                    setMergeGroups(prev => prev.filter((_, i) => i !== gi));
+                  }} merging={merging} />
+                ))
+              )}
+            </div>
+            <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700">
+              <button onClick={() => setShowMerge(false)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm delete order modal */}
       {confirmDeleteOrder && (
