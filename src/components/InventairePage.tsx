@@ -245,6 +245,8 @@ export function InventairePage() {
   const [search, setSearch]                   = useState('');
   const [trackingInput, setTrackingInput]     = useState('');
   const [savingTracking, setSavingTracking]   = useState(false);
+  const [editingNote, setEditingNote]         = useState<{id:string, value:string} | null>(null);
+  const [savingNote, setSavingNote]           = useState(false);
   const [searchStock, setSearchStock]         = useState('');
   const [sortBy, setSortBy]                   = useState<'name'|'price_asc'|'price_desc'|'qty_asc'|'qty_desc'|'value_desc'|'value_asc'>('name');
 
@@ -349,6 +351,13 @@ export function InventairePage() {
       await supabase.from('orders').update({ hidden_in_stock: true }).eq('id', orderId);
     }
     setTab('stock');
+  };
+
+  const handleSaveNote = async (orderId: string, note: string) => {
+    setSavingNote(true);
+    const { error } = await supabase.from('orders').update({ notes: note.trim() || null }).eq('id', orderId);
+    if (!error) { await fetchOrders(); setEditingNote(null); }
+    setSavingNote(false);
   };
 
   const handleDeleteOrder = async (orderId: string) => {
