@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
+import { Loader2, Link, useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import {
   Package, MapPin, Home, Clock, ExternalLink, CheckCircle,
   ChevronRight, Box, Plus, Trash2, Edit2, Check, X,
@@ -243,6 +243,8 @@ export function InventairePage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showAdd, setShowAdd]                 = useState(false);
   const [search, setSearch]                   = useState('');
+  const [trackingInput, setTrackingInput]     = useState('');
+  const [savingTracking, setSavingTracking]   = useState(false);
   const [searchStock, setSearchStock]         = useState('');
   const [sortBy, setSortBy]                   = useState<'name'|'price_asc'|'price_desc'|'qty_asc'|'qty_desc'|'value_desc'|'value_asc'>('name');
 
@@ -559,6 +561,25 @@ export function InventairePage() {
                             </button>
                           </div>
                         </div>
+                        {!selectedOrder.tracking_link && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <Link size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-400" />
+                              <input
+                                value={trackingInput}
+                                onChange={e => setTrackingInput(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSaveTracking()}
+                                placeholder="Coller le lien de suivi…"
+                                className="w-full pl-8 pr-3 py-2 text-sm border border-orange-200 rounded-xl bg-orange-50 dark:bg-orange-950 text-gray-700 dark:text-gray-300 placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                              />
+                            </div>
+                            <button onClick={handleSaveTracking} disabled={!trackingInput.trim() || savingTracking}
+                              className="px-3 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 disabled:opacity-40 flex items-center gap-1.5 flex-shrink-0">
+                              {savingTracking ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                              Ajouter
+                            </button>
+                          </div>
+                        )}
                         <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-50 dark:border-gray-700 flex-wrap">
                           <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"><Box size={14} className="text-gray-300 dark:text-gray-700" /><span><strong className="text-gray-800 dark:text-gray-200">{qty}</strong> unités</span></div>
                           <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"><Package size={14} className="text-gray-300 dark:text-gray-700" /><span><strong className="text-gray-800 dark:text-gray-200">{selectedOrder.items.length}</strong> articles</span></div>
