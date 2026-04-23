@@ -360,6 +360,24 @@ export function InventairePage() {
   const handleAddOrder    = async (d: any) => { await addOrder(d); setShowForm(false); };
   const handleUpdateOrder = async (d: any) => { if (editingOrder) { await updateOrder(editingOrder.id, d); setEditingOrder(null); setShowForm(false); } };
 
+  const handleSaveTracking = async () => {
+    if (!selectedOrder || !trackingInput.trim()) return;
+    setSavingTracking(true);
+    const { error } = await supabase.from('orders').update({ tracking_link: trackingInput.trim() }).eq('id', selectedOrder.id);
+    if (!error) {
+      await fetchOrders();
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      fetch(`${url}/functions/v1/extract_delivery_date`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ order_id: selectedOrder.id, tracking_url: trackingInput.trim() }),
+      }).catch(() => {});
+      setTrackingInput('');
+    }
+    setSavingTracking(false);
+  };
+
   return (
     <>
       <style>{`
