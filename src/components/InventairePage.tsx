@@ -491,16 +491,22 @@ export function InventairePage() {
                                   <p className={`text-xs font-medium ${dl !== null && dl < 0 ? 'text-red-400' : dl === 0 ? 'text-emerald-500' : 'text-gray-400 dark:text-gray-400'}`}>
                                     {dl === 0 ? 'Auj.' : fmtShort(order.expected_delivery_date)}
                                   </p>
-                                ) : <p className="text-xs text-gray-300 dark:text-gray-700">—</p>}
+                                ) : !order.tracking_link ? (
+                                  <span className="text-xs font-semibold text-orange-500 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-md">Suivi manquant</span>
+                                ) : <p className="text-xs text-gray-300 dark:text-gray-700">En transit</p>}
                               </div>
                             </div>
                           </div>
-                          <div className="mt-2 h-0.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
-                            <div className="h-full rounded-full transition-all" style={{
-                              background: st === 'delivered' ? '#10b981' : st === 'available' ? '#f59e0b' : '#3b82f6',
-                              width: st === 'delivered' ? '100%' : st === 'available' ? '70%' : '35%'
-                            }} />
-                          </div>
+                          {!order.tracking_link && st !== 'delivered' ? (
+                            <div className="mt-2 h-0.5 rounded-full overflow-hidden" style={{background:'repeating-linear-gradient(90deg,#f97316 0,#f97316 6px,transparent 6px,transparent 10px)'}} />
+                          ) : (
+                            <div className="mt-2 h-0.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                              <div className="h-full rounded-full transition-all" style={{
+                                background: st === 'delivered' ? '#10b981' : st === 'available' ? '#8b5cf6' : '#3b82f6',
+                                width: st === 'delivered' ? '100%' : st === 'available' ? '65%' : '35%'
+                              }} />
+                            </div>
+                          )}
                         </div>
                       );
                     })}
